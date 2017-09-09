@@ -8,6 +8,7 @@
     <inceptionYear>2017</inceptionYear>
     <name>storm-rabbitmq</name>
     <description>Storm bolt and spout for RabbitMQ</description>
+    <url>https://github.com/anderelate/storm-rabbitmq</url>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -79,4 +80,17 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
+    <developers>
+        <developer>
+            <id>anderelate</id>
+            <name>Andrey Burov</name>
+            <email>andreyburov@syberia.net</email>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:git@github.com:anderelate/storm-rabbitmq.git</connection>
+        <developerConnection>scm:git:git@github.com:anderelate/storm-rabbitmq.git</developerConnection>
+        <url>https://github.com/anderelate/storm-rabbitmq</url>
+        <tag>HEAD</tag>
+    </scm>
 </project>
