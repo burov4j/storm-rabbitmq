@@ -19,6 +19,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.GetResponse;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeoutException;
 import org.apache.storm.spout.SpoutOutputCollector;
 import org.apache.storm.task.TopologyContext;
@@ -184,8 +185,8 @@ public class RabbitMqSpout extends BaseRichSpout {
     @Override
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         Map<String, Fields> streamsOutputFields = rabbitMqMessageScheme.getStreamsOutputFields();
-        for (String streamId : streamsOutputFields.keySet()) {
-            declarer.declareStream(streamId, streamsOutputFields.get(streamId));
+        for (Entry<String, Fields> entry : streamsOutputFields.entrySet()) {
+            declarer.declareStream(entry.getKey(), entry.getValue());
         }
     }
 
