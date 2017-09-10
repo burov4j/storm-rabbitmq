@@ -34,6 +34,8 @@ import org.slf4j.LoggerFactory;
  */
 public class RabbitMqSpout extends BaseRichSpout {
 
+    private static final long serialVersionUID = 614091429512483100L;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMqSpout.class);
     
     public static final String KEY_QUEUE_NAME = "rabbitmq.queue_name";

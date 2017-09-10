@@ -26,6 +26,8 @@ import org.apache.storm.tuple.Tuple;
  */
 class EmptyTupleToRabbitMqMessageConverter implements TupleToRabbitMqMessageConverter {
 
+    private static final long serialVersionUID = -7111105887908787772L;
+
     @Override
     public void prepare(Map config, TopologyContext context) {
         // no operation

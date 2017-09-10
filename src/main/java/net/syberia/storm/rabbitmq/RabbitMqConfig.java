@@ -24,6 +24,8 @@ import java.util.Map;
  * @author Andrey Burov
  */
 public class RabbitMqConfig implements Serializable {
+
+    private static final long serialVersionUID = 5275552557426635758L;
     
     public static final String KEY_HOST = "rabbitmq.host";
     public static final String KEY_PORT = "rabbitmq.port";

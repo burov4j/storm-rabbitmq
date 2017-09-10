@@ -27,6 +27,8 @@ import org.apache.storm.tuple.Fields;
  */
 class EmptyRabbitMqMessageScheme implements RabbitMqMessageScheme {
 
+    private static final long serialVersionUID = 7487193577014813339L;
+
     @Override
     public void prepare(Map config, TopologyContext context) {
         // no operation

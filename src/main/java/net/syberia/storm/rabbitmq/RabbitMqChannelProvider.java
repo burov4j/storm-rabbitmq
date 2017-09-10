@@ -28,6 +28,8 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
  */
 public class RabbitMqChannelProvider implements Serializable {
 
+    private static final long serialVersionUID = 8824907115492553548L;
+
     private final RabbitMqConfig rabbitMqConfig;
 
     private transient RabbitMqChannelFactory rabbitMqChannelFactory;

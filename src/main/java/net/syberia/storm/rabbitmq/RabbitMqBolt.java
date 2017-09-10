@@ -34,6 +34,8 @@ import org.slf4j.LoggerFactory;
  */
 public class RabbitMqBolt extends BaseRichBolt {
 
+    private static final long serialVersionUID = 377563808237437264L;
+    
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMqBolt.class);
 
     private final RabbitMqChannelProvider rabbitMqChannelProvider;
