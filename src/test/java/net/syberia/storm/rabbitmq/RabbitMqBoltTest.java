@@ -46,7 +46,7 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
     public void prepareAndUse() throws Exception {
         String exchange = "testExchange",
                 routingKey = "testRoutingKey";
-        byte[] messageBody = "testMessageBody".getBytes();
+        byte[] messageBody = "testMessageBody".getBytes("UTF8");
         AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder().build();
         RabbitMqBolt rabbitMqBolt = new RabbitMqBolt(rabbitMqChannelProvider, new EmptyTupleToRabbitMqMessageConverter() {
             @Override

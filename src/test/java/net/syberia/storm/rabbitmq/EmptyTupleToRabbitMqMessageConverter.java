@@ -50,7 +50,7 @@ class EmptyTupleToRabbitMqMessageConverter implements TupleToRabbitMqMessageConv
 
     @Override
     public byte[] getMessageBody(Tuple tuple) throws Exception {
-        return null;
+        return new byte[0];
     }
 
     @Override
