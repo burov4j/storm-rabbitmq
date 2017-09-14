@@ -70,10 +70,12 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
             }
         });
         rabbitMqBolt.declareOutputFields(null);
-        rabbitMqBolt.prepare(null, null, null);
-        rabbitMqBolt.execute(null);
+        rabbitMqBolt.prepare(null, null, mockOutputCollector);
+        Tuple mockTuple = mock(Tuple.class);
+        rabbitMqBolt.execute(mockTuple);
         rabbitMqBolt.cleanup();
         verify(mockChannel, times(1)).basicPublish(exchange, routingKey, properties, messageBody);
+        verify(mockOutputCollector, times(1)).ack(mockTuple);
         verify(rabbitMqChannelProvider, times(1)).returnChannel(mockChannel);
         verify(rabbitMqChannelProvider, times(1)).cleanup();
     }

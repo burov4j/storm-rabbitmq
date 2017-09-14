@@ -95,9 +95,12 @@ public class RabbitMqBolt extends BaseRichBolt {
             LOGGER.error("Unable to publish RabbitMQ message", ex);
             collector.reportError(ex);
             collector.fail(input);
+            return;
         } finally {
             rabbitMqChannelProvider.returnChannel(channel);
         }
+        
+        collector.ack(input);
     }
 
     @Override
