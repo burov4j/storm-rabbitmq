@@ -15,6 +15,7 @@
  */
 package net.syberia.storm.rabbitmq;
 
+import com.rabbitmq.client.Address;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
@@ -34,6 +35,10 @@ class RabbitMqChannelFactory extends BasePooledObjectFactory<Channel> implements
 
     public RabbitMqChannelFactory(ConnectionFactory rabbitMqConnectionFactory) throws IOException, TimeoutException {
         this.rabbitMqConnection = rabbitMqConnectionFactory.newConnection();
+    }
+    
+    public RabbitMqChannelFactory(ConnectionFactory rabbitMqConnectionFactory, Address[] addresses) throws IOException, TimeoutException {
+        this.rabbitMqConnection = rabbitMqConnectionFactory.newConnection(addresses);
     }
 
     @Override

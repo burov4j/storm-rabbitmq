@@ -32,6 +32,11 @@ public class RabbitMqConfigBuilder {
         rabbitMqConfig.setPort(port);
         return this;
     }
+    
+    public RabbitMqConfigBuilder setAddresses(String addresses) {
+        rabbitMqConfig.setAddresses(addresses);
+        return this;
+    }
 
     public RabbitMqConfigBuilder setUsername(String username) {
         rabbitMqConfig.setUsername(username);

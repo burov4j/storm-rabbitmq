@@ -15,6 +15,7 @@
  */
 package net.syberia.storm.rabbitmq;
 
+import com.rabbitmq.client.Address;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ConnectionFactory;
 import java.io.IOException;
@@ -36,7 +37,7 @@ public class RabbitMqChannelProvider implements Serializable {
     private transient RabbitMqChannelPool rabbitMqChannelPool;
 
     RabbitMqChannelProvider() {
-        this(null);
+        this(new RabbitMqConfig());
     }
     
     public RabbitMqChannelProvider(RabbitMqConfig rabbitMqConfig) {
@@ -46,7 +47,12 @@ public class RabbitMqChannelProvider implements Serializable {
     synchronized void prepare() throws IOException, TimeoutException {
         if (rabbitMqChannelPool == null) {
             ConnectionFactory rabbitMqConnectionFactory = createConnectionFactory();
-            this.rabbitMqChannelFactory = new RabbitMqChannelFactory(rabbitMqConnectionFactory);
+            if (rabbitMqConfig.hasAddresses()) {
+                Address[] addresses = Address.parseAddresses(rabbitMqConfig.getAddresses());
+                this.rabbitMqChannelFactory = new RabbitMqChannelFactory(rabbitMqConnectionFactory, addresses);
+            } else {
+                this.rabbitMqChannelFactory = new RabbitMqChannelFactory(rabbitMqConnectionFactory);
+            }
             this.rabbitMqChannelPool = createRabbitMqChannelPool(rabbitMqChannelFactory);
         }
     }

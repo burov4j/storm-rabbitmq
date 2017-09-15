@@ -18,6 +18,7 @@ package net.syberia.storm.rabbitmq;
 import com.rabbitmq.client.ConnectionFactory;
 import java.io.Serializable;
 import java.util.Map;
+import org.apache.storm.shade.org.apache.commons.lang.StringUtils;
 
 /**
  *
@@ -29,6 +30,7 @@ public class RabbitMqConfig implements Serializable {
     
     public static final String KEY_HOST = "rabbitmq.host";
     public static final String KEY_PORT = "rabbitmq.port";
+    public static final String KEY_ADDRESSES = "rabbitmq.addresses";
     public static final String KEY_USERNAME = "rabbitmq.username";
     public static final String KEY_PASSWORD = "rabbitmq.password";
     public static final String KEY_VIRTUAL_HOST = "rabbitmq.virtual_host";
@@ -36,6 +38,7 @@ public class RabbitMqConfig implements Serializable {
     
     private String host = ConnectionFactory.DEFAULT_HOST;
     private int port = ConnectionFactory.DEFAULT_AMQP_PORT;
+    private String addresses = StringUtils.EMPTY;
     private String username = ConnectionFactory.DEFAULT_USER;
     private String password = ConnectionFactory.DEFAULT_PASS;
     private String virtualHost = ConnectionFactory.DEFAULT_VHOST;
@@ -48,6 +51,7 @@ public class RabbitMqConfig implements Serializable {
     public RabbitMqConfig(Map<String, Object> rabbitMqConfig) {
         this.host = ConfigFetcher.fetchStringProperty(rabbitMqConfig, KEY_HOST, this.host);
         this.port = ConfigFetcher.fetchIntegerProperty(rabbitMqConfig, KEY_PORT, this.port);
+        this.addresses = ConfigFetcher.fetchStringProperty(rabbitMqConfig, KEY_ADDRESSES, this.addresses);
         this.username = ConfigFetcher.fetchStringProperty(rabbitMqConfig, KEY_USERNAME, this.username);
         this.password = ConfigFetcher.fetchStringProperty(rabbitMqConfig, KEY_PASSWORD, this.password);
         this.virtualHost = ConfigFetcher.fetchStringProperty(rabbitMqConfig, KEY_VIRTUAL_HOST, this.virtualHost);
@@ -68,6 +72,18 @@ public class RabbitMqConfig implements Serializable {
 
     void setPort(int port) {
         this.port = port;
+    }
+    
+    public boolean hasAddresses() {
+        return !addresses.isEmpty();
+    }
+
+    public String getAddresses() {
+        return addresses;
+    }
+
+    void setAddresses(String addresses) {
+        this.addresses = addresses;
     }
 
     public String getUsername() {

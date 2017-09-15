@@ -29,12 +29,14 @@ public class RabbitMqConfigBuilderTest {
         int requestedHeartbeat = 121,
                 port = 8889;
         String host = "testHost",
+                addresses = "testAddresses",
                 password = "testPassword",
                 username = "testUsername",
                 virtualHost = "testVirtualHost";
         RabbitMqConfig rabbitMqConfig = new RabbitMqConfigBuilder()
                 .setRequestedHeartbeat(requestedHeartbeat)
                 .setHost(host)
+                .setAddresses(addresses)
                 .setPassword(password)
                 .setPort(port)
                 .setUsername(username)
@@ -43,6 +45,7 @@ public class RabbitMqConfigBuilderTest {
         assertEquals(requestedHeartbeat, rabbitMqConfig.getRequestedHeartbeat());
         assertEquals(port, rabbitMqConfig.getPort());
         assertEquals(host, rabbitMqConfig.getHost());
+        assertEquals(addresses, rabbitMqConfig.getAddresses());
         assertEquals(password, rabbitMqConfig.getPassword());
         assertEquals(username, rabbitMqConfig.getUsername());
         assertEquals(virtualHost, rabbitMqConfig.getVirtualHost());

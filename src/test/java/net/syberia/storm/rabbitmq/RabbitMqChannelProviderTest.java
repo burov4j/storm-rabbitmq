@@ -15,12 +15,17 @@
  */
 package net.syberia.storm.rabbitmq;
 
+import com.rabbitmq.client.Address;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ConnectionFactory;
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
 import org.junit.Test;
 import static junit.framework.Assert.assertEquals;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 /**
  *
@@ -52,6 +57,18 @@ public class RabbitMqChannelProviderTest extends RabbitMqTest {
         assertEquals(password, connectionFactory.getPassword());
         assertEquals(username, connectionFactory.getUsername());
         assertEquals(virtualHost, connectionFactory.getVirtualHost());
+    }
+    
+    @Test
+    public void prepareWithAddresses() throws IOException, TimeoutException {
+        String addresses = "10.189.21.119:8080,10.189.21.118:8181";
+        RabbitMqConfig rabbitMqConfig = new RabbitMqConfigBuilder()
+                .setAddresses(addresses)
+                .build();
+        RabbitMqChannelProvider rabbitMqChannelProvider = spy(new RabbitMqChannelProvider(rabbitMqConfig));
+        doReturn(mockConnectionFactory).when(rabbitMqChannelProvider).createConnectionFactory();
+        rabbitMqChannelProvider.prepare();
+        verify(mockConnectionFactory, times(1)).newConnection(Address.parseAddresses(addresses));
     }
 
     @Test
