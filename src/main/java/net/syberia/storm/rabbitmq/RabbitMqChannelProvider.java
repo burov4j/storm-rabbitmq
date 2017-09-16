@@ -19,7 +19,11 @@ import com.rabbitmq.client.Address;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ConnectionFactory;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
@@ -30,6 +34,8 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 public class RabbitMqChannelProvider implements Serializable {
 
     private static final long serialVersionUID = 8824907115492553548L;
+    
+    private static final Set<RabbitMqChannelProvider> knownProviders = new HashSet<>();
 
     private final RabbitMqConfig rabbitMqConfig;
 
@@ -39,9 +45,10 @@ public class RabbitMqChannelProvider implements Serializable {
     RabbitMqChannelProvider() {
         this(new RabbitMqConfig());
     }
-    
+
     public RabbitMqChannelProvider(RabbitMqConfig rabbitMqConfig) {
         this.rabbitMqConfig = rabbitMqConfig;
+        registerProviderIfAbsent();
     }
 
     synchronized void prepare() throws IOException, TimeoutException {
@@ -90,6 +97,48 @@ public class RabbitMqChannelProvider implements Serializable {
             rabbitMqChannelPool.close();
             rabbitMqChannelFactory.close();
         }
+    }
+    
+    private void readObject(ObjectInputStream objectInputStream) throws IOException, ClassNotFoundException {
+        objectInputStream.defaultReadObject();
+        registerProviderIfAbsent();
+    }
+    
+    private void registerProviderIfAbsent() {
+        if (!knownProviders.contains(this)) {
+            knownProviders.add(this);
+        }
+    }
+    
+    private Object readResolve() {
+        for (RabbitMqChannelProvider provider : knownProviders) {
+            if (provider.equals(this)) {
+                return provider;
+            }
+        }
+        return this;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 67 * hash + Objects.hashCode(this.rabbitMqConfig);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        RabbitMqChannelProvider other = (RabbitMqChannelProvider) obj;
+        return Objects.equals(this.rabbitMqConfig, other.rabbitMqConfig);
     }
 
 }

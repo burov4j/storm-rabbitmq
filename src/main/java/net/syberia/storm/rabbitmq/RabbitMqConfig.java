@@ -18,6 +18,7 @@ package net.syberia.storm.rabbitmq;
 import com.rabbitmq.client.ConnectionFactory;
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Objects;
 import org.apache.storm.shade.org.apache.commons.lang.StringUtils;
 
 /**
@@ -27,7 +28,7 @@ import org.apache.storm.shade.org.apache.commons.lang.StringUtils;
 public class RabbitMqConfig implements Serializable {
 
     private static final long serialVersionUID = 5275552557426635758L;
-    
+
     public static final String KEY_HOST = "rabbitmq.host";
     public static final String KEY_PORT = "rabbitmq.port";
     public static final String KEY_ADDRESSES = "rabbitmq.addresses";
@@ -35,7 +36,7 @@ public class RabbitMqConfig implements Serializable {
     public static final String KEY_PASSWORD = "rabbitmq.password";
     public static final String KEY_VIRTUAL_HOST = "rabbitmq.virtual_host";
     public static final String KEY_REQUESTED_HEARTBEAT = "rabbitmq.requested_heartbeat";
-    
+
     private String host = ConnectionFactory.DEFAULT_HOST;
     private int port = ConnectionFactory.DEFAULT_AMQP_PORT;
     private String addresses = StringUtils.EMPTY;
@@ -47,7 +48,7 @@ public class RabbitMqConfig implements Serializable {
     RabbitMqConfig() {
         super();
     }
-    
+
     public RabbitMqConfig(Map<String, Object> rabbitMqConfig) {
         this.host = ConfigFetcher.fetchStringProperty(rabbitMqConfig, KEY_HOST, this.host);
         this.port = ConfigFetcher.fetchIntegerProperty(rabbitMqConfig, KEY_PORT, this.port);
@@ -73,7 +74,7 @@ public class RabbitMqConfig implements Serializable {
     void setPort(int port) {
         this.port = port;
     }
-    
+
     public boolean hasAddresses() {
         return !addresses.isEmpty();
     }
@@ -117,5 +118,51 @@ public class RabbitMqConfig implements Serializable {
     void setRequestedHeartbeat(int requestedHeartbeat) {
         this.requestedHeartbeat = requestedHeartbeat;
     }
-    
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 11 * hash + Objects.hashCode(this.host);
+        hash = 11 * hash + this.port;
+        hash = 11 * hash + Objects.hashCode(this.addresses);
+        hash = 11 * hash + Objects.hashCode(this.username);
+        hash = 11 * hash + Objects.hashCode(this.password);
+        hash = 11 * hash + Objects.hashCode(this.virtualHost);
+        hash = 11 * hash + this.requestedHeartbeat;
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final RabbitMqConfig other = (RabbitMqConfig) obj;
+        if (this.port != other.port) {
+            return false;
+        }
+        if (this.requestedHeartbeat != other.requestedHeartbeat) {
+            return false;
+        }
+        if (!Objects.equals(this.host, other.host)) {
+            return false;
+        }
+        if (!Objects.equals(this.addresses, other.addresses)) {
+            return false;
+        }
+        if (!Objects.equals(this.username, other.username)) {
+            return false;
+        }
+        if (!Objects.equals(this.password, other.password)) {
+            return false;
+        }
+        return Objects.equals(this.virtualHost, other.virtualHost);
+    }
+
 }
