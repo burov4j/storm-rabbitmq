@@ -38,6 +38,10 @@ class ConfigFetcher {
     public static int fetchIntegerProperty(Map<String, Object> config, String key, int defaultValue) {
         return fetchProperty(config, key, defaultValue);
     }
+    
+    public static long fetchLongProperty(Map<String, Object> config, String key, long defaultValue) {
+        return fetchProperty(config, key, defaultValue);
+    }
 
     public static boolean fetchBooleanProperty(Map<String, Object> config, String key, boolean defaultValue) {
         return fetchProperty(config, key, defaultValue);

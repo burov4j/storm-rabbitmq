@@ -26,6 +26,7 @@ import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseRichSpout;
 import org.apache.storm.tuple.Fields;
+import org.apache.storm.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +43,7 @@ public class RabbitMqSpout extends BaseRichSpout {
     public static final String KEY_QUEUE_NAME = "rabbitmq.queue_name";
     public static final String KEY_PREFETCH_COUNT = "rabbitmq.prefetch_count";
     public static final String KEY_REQUEUE_ON_FAIL = "rabbitmq.requeue_on_fail";
+    public static final String KEY_EMPTY_QUEUE_SLEEP_MILLIS = "rabbitmq.empty_queue_sleep_millis";
 
     private final RabbitMqChannelProvider rabbitMqChannelProvider;
     private final RabbitMqMessageScheme rabbitMqMessageScheme;
@@ -51,6 +53,7 @@ public class RabbitMqSpout extends BaseRichSpout {
     private String queueName;
     private int prefetchCount;
     private boolean requeueOnFail;
+    private long emptyQueueSleepMillis;
     private SpoutOutputCollector collector;
 
     private boolean active;
@@ -70,6 +73,7 @@ public class RabbitMqSpout extends BaseRichSpout {
         this.queueName = ConfigFetcher.fetchStringProperty(conf, KEY_QUEUE_NAME);
         this.prefetchCount = ConfigFetcher.fetchIntegerProperty(conf, KEY_PREFETCH_COUNT, 10);
         this.requeueOnFail = ConfigFetcher.fetchBooleanProperty(conf, KEY_REQUEUE_ON_FAIL, false);
+        this.emptyQueueSleepMillis = ConfigFetcher.fetchLongProperty(conf, KEY_EMPTY_QUEUE_SLEEP_MILLIS, 100L);
         this.collector = collector;
         
         this.rabbitMqMessageScheme.prepare(conf, context);
@@ -109,6 +113,7 @@ public class RabbitMqSpout extends BaseRichSpout {
             for (int emitted = 0; emitted < prefetchCount; emitted++) {
                 GetResponse response = channel.basicGet(queueName, false);
                 if (response == null) { // no message retrieved
+                    Utils.sleep(emptyQueueSleepMillis);
                     return;
                 } else {
                     long messageId = response.getEnvelope().getDeliveryTag();
