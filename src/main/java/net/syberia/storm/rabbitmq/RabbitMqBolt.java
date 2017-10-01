@@ -38,10 +38,15 @@ public class RabbitMqBolt extends BaseRichBolt {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMqBolt.class);
 
-    private final RabbitMqChannelProvider rabbitMqChannelProvider;
     private final TupleToRabbitMqMessageConverter tupleToRabbitMqMessageConverter;
+    
+    private RabbitMqChannelProvider rabbitMqChannelProvider;
 
     private OutputCollector collector;
+    
+    public RabbitMqBolt(TupleToRabbitMqMessageConverter tupleToRabbitMqMessageConverter) {
+        this(null, tupleToRabbitMqMessageConverter);
+    }
 
     public RabbitMqBolt(RabbitMqChannelProvider rabbitMqChannelProvider,
             TupleToRabbitMqMessageConverter tupleToRabbitMqMessageConverter) {
@@ -54,6 +59,10 @@ public class RabbitMqBolt extends BaseRichBolt {
         this.collector = collector;
 
         this.tupleToRabbitMqMessageConverter.prepare(stormConf, context);
+        
+        if (this.rabbitMqChannelProvider == null) {
+            this.rabbitMqChannelProvider = RabbitMqChannelProvider.withStormConfig(stormConf);
+        }
         
         try {
             this.rabbitMqChannelProvider.prepare();

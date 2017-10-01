@@ -45,8 +45,9 @@ public class RabbitMqSpout extends BaseRichSpout {
     public static final String KEY_REQUEUE_ON_FAIL = "rabbitmq.requeue_on_fail";
     public static final String KEY_EMPTY_QUEUE_SLEEP_MILLIS = "rabbitmq.empty_queue_sleep_millis";
 
-    private final RabbitMqChannelProvider rabbitMqChannelProvider;
     private final RabbitMqMessageScheme rabbitMqMessageScheme;
+    
+    private RabbitMqChannelProvider rabbitMqChannelProvider;
 
     private RabbitMqInitializer initializer;
 
@@ -57,6 +58,10 @@ public class RabbitMqSpout extends BaseRichSpout {
     private SpoutOutputCollector collector;
 
     private boolean active;
+    
+    public RabbitMqSpout(RabbitMqMessageScheme rabbitMqMessageScheme) {
+        this(null, rabbitMqMessageScheme);
+    }
 
     public RabbitMqSpout(RabbitMqChannelProvider rabbitMqChannelProvider,
             RabbitMqMessageScheme rabbitMqMessageScheme) {
@@ -77,6 +82,10 @@ public class RabbitMqSpout extends BaseRichSpout {
         this.collector = collector;
         
         this.rabbitMqMessageScheme.prepare(conf, context);
+        
+        if (this.rabbitMqChannelProvider == null) {
+            this.rabbitMqChannelProvider = RabbitMqChannelProvider.withStormConfig(conf);
+        }
 
         try {
             this.rabbitMqChannelProvider.prepare();

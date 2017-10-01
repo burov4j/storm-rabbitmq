@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
@@ -45,10 +46,24 @@ public class RabbitMqChannelProvider implements Serializable {
     RabbitMqChannelProvider() {
         this(new RabbitMqConfig());
     }
+    
+    private RabbitMqChannelProvider(Map<String, Object> stormConf) {
+        this(new RabbitMqConfig(stormConf));
+    }
 
     public RabbitMqChannelProvider(RabbitMqConfig rabbitMqConfig) {
         this.rabbitMqConfig = rabbitMqConfig;
         registerProviderIfAbsent();
+    }
+    
+    static synchronized RabbitMqChannelProvider withStormConfig(Map<String, Object> stormConf) {
+        RabbitMqChannelProvider provider = new RabbitMqChannelProvider(stormConf);
+        for (RabbitMqChannelProvider knownProvider : knownProviders) {
+            if (knownProvider.equals(provider)) {
+                return knownProvider;
+            }
+        }
+        return provider;
     }
 
     synchronized void prepare() throws IOException, TimeoutException {
