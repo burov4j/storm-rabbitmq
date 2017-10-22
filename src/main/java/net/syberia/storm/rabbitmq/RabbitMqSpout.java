@@ -144,7 +144,7 @@ public class RabbitMqSpout extends BaseRichSpout {
                 return;
             } catch (ShutdownSignalException ex) {
                 collector.reportError(ex);
-                Utils.sleep(60 * 1000); // wait for RabbitMQ startup
+                Utils.sleep(5000); // wait for RabbitMQ startup
                 return;
             } catch (ConsumerCancelledException ex) {
                 collector.reportError(ex);
