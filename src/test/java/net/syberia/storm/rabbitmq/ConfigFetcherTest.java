@@ -73,6 +73,15 @@ public class ConfigFetcherTest {
         conf.put(propertyKey, propertyValue);
         assertEquals(anotherValue, ConfigFetcher.fetchIntegerProperty(conf, anotherKey, anotherValue));
     }
+    
+    @Test
+    public void fetchIntegerPropertyButLong() {
+        Map<String, Object> conf = new HashMap<>(1);
+        String propertyKey = "propertyKey";
+        long propertyValue = 445342;
+        conf.put(propertyKey, propertyValue);
+        assertEquals(propertyValue, ConfigFetcher.fetchIntegerProperty(conf, propertyKey, 10));
+    }
 
     @Test
     public void fetchBooleanPropertyExists() {

@@ -36,10 +36,14 @@ class ConfigFetcher {
     }
 
     public static int fetchIntegerProperty(Map<String, Object> config, String key, int defaultValue) {
-        return fetchProperty(config, key, defaultValue);
+        return fetchNumberProperty(config, key, defaultValue).intValue();
     }
     
     public static long fetchLongProperty(Map<String, Object> config, String key, long defaultValue) {
+        return fetchNumberProperty(config, key, defaultValue).longValue();
+    }
+    
+    private static Number fetchNumberProperty(Map<String, Object> config, String key, Number defaultValue) {
         return fetchProperty(config, key, defaultValue);
     }
 
