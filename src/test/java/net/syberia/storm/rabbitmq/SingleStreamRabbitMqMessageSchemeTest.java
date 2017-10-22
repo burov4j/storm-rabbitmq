@@ -15,7 +15,8 @@
  */
 package net.syberia.storm.rabbitmq;
 
-import com.rabbitmq.client.GetResponse;
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Envelope;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +45,7 @@ public class SingleStreamRabbitMqMessageSchemeTest {
             }
             
             @Override
-            public List<Object> convertToTuple(GetResponse response) throws Exception {
+            public List<Object> convertToTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception {
                 return Arrays.asList(stringValue);
             }
 
@@ -59,7 +60,7 @@ public class SingleStreamRabbitMqMessageSchemeTest {
             }
         };
 
-        StreamedTuple streamedTuple = rabbitMqMessageScheme.convertToStreamedTuple(null);
+        StreamedTuple streamedTuple = rabbitMqMessageScheme.convertToStreamedTuple(null, null, null);
         assertEquals(streamId, streamedTuple.getStreamId());
         assertEquals(stringValue, (String) streamedTuple.getTuple().get(0));
 
@@ -76,7 +77,7 @@ public class SingleStreamRabbitMqMessageSchemeTest {
             }
             
             @Override
-            public List<Object> convertToTuple(GetResponse response) throws Exception {
+            public List<Object> convertToTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception {
                 return Arrays.asList("stringValue");
             }
 
@@ -91,7 +92,7 @@ public class SingleStreamRabbitMqMessageSchemeTest {
             }
         };
 
-        StreamedTuple streamedTuple = rabbitMqMessageScheme.convertToStreamedTuple(null);
+        StreamedTuple streamedTuple = rabbitMqMessageScheme.convertToStreamedTuple(null, null, null);
         assertEquals(Utils.DEFAULT_STREAM_ID, streamedTuple.getStreamId());
     }
 
@@ -104,7 +105,7 @@ public class SingleStreamRabbitMqMessageSchemeTest {
             }
             
             @Override
-            public List<Object> convertToTuple(GetResponse response) throws Exception {
+            public List<Object> convertToTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception {
                 return null;
             }
 
@@ -118,7 +119,7 @@ public class SingleStreamRabbitMqMessageSchemeTest {
                 // no operation
             }
         };
-        StreamedTuple streamedTuple = rabbitMqMessageScheme.convertToStreamedTuple(null);
+        StreamedTuple streamedTuple = rabbitMqMessageScheme.convertToStreamedTuple(null, null, null);
         assertNull(streamedTuple);
     }
 

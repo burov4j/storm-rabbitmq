@@ -15,7 +15,8 @@
  */
 package net.syberia.storm.rabbitmq;
 
-import com.rabbitmq.client.GetResponse;
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Envelope;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,8 +40,8 @@ public abstract class SingleStreamRabbitMqMessageScheme implements RabbitMqMessa
     }
 
     @Override
-    public final StreamedTuple convertToStreamedTuple(GetResponse response) throws Exception {
-        List<Object> tuple = convertToTuple(response);
+    public final StreamedTuple convertToStreamedTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception {
+        List<Object> tuple = convertToTuple(envelope, properties, body);
         if (tuple == null || tuple.isEmpty()) {
             return null;
         } else {
@@ -48,7 +49,7 @@ public abstract class SingleStreamRabbitMqMessageScheme implements RabbitMqMessa
         }
     }
 
-    public abstract List<Object> convertToTuple(GetResponse response) throws Exception;
+    public abstract List<Object> convertToTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception;
 
     @Override
     public final Map<String, Fields> getStreamsOutputFields() {

@@ -16,7 +16,11 @@
 package net.syberia.storm.rabbitmq;
 
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.GetResponse;
+import com.rabbitmq.client.ConsumerCancelledException;
+import com.rabbitmq.client.Envelope;
+import com.rabbitmq.client.QueueingConsumer;
+import com.rabbitmq.client.QueueingConsumer.Delivery;
+import com.rabbitmq.client.ShutdownSignalException;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -26,7 +30,6 @@ import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseRichSpout;
 import org.apache.storm.tuple.Fields;
-import org.apache.storm.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,14 +42,13 @@ public class RabbitMqSpout extends BaseRichSpout {
     private static final long serialVersionUID = 614091429512483100L;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMqSpout.class);
-    
+
     public static final String KEY_QUEUE_NAME = "rabbitmq.queue_name";
     public static final String KEY_PREFETCH_COUNT = "rabbitmq.prefetch_count";
     public static final String KEY_REQUEUE_ON_FAIL = "rabbitmq.requeue_on_fail";
-    public static final String KEY_EMPTY_QUEUE_SLEEP_MILLIS = "rabbitmq.empty_queue_sleep_millis";
 
     private final RabbitMqMessageScheme rabbitMqMessageScheme;
-    
+
     private RabbitMqChannelProvider rabbitMqChannelProvider;
 
     private RabbitMqInitializer initializer;
@@ -54,11 +56,13 @@ public class RabbitMqSpout extends BaseRichSpout {
     private String queueName;
     private int prefetchCount;
     private boolean requeueOnFail;
-    private long emptyQueueSleepMillis;
     private SpoutOutputCollector collector;
 
+    private Channel channel;
+    QueueingConsumer queueingConsumer; // package-private for testing
+
     private boolean active;
-    
+
     public RabbitMqSpout(RabbitMqMessageScheme rabbitMqMessageScheme) {
         this(null, rabbitMqMessageScheme);
     }
@@ -76,13 +80,15 @@ public class RabbitMqSpout extends BaseRichSpout {
     @Override
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         this.queueName = ConfigFetcher.fetchStringProperty(conf, KEY_QUEUE_NAME);
-        this.prefetchCount = ConfigFetcher.fetchIntegerProperty(conf, KEY_PREFETCH_COUNT, 10);
+        this.prefetchCount = ConfigFetcher.fetchIntegerProperty(conf, KEY_PREFETCH_COUNT, 50);
+        if (this.prefetchCount < 1) {
+            throw new IllegalArgumentException("Invalid prefetch count: " + this.prefetchCount);
+        }
         this.requeueOnFail = ConfigFetcher.fetchBooleanProperty(conf, KEY_REQUEUE_ON_FAIL, false);
-        this.emptyQueueSleepMillis = ConfigFetcher.fetchLongProperty(conf, KEY_EMPTY_QUEUE_SLEEP_MILLIS, 100L);
         this.collector = collector;
-        
+
         this.rabbitMqMessageScheme.prepare(conf, context);
-        
+
         if (this.rabbitMqChannelProvider == null) {
             this.rabbitMqChannelProvider = RabbitMqChannelProvider.withStormConfig(conf);
         }
@@ -93,17 +99,32 @@ public class RabbitMqSpout extends BaseRichSpout {
             throw new RuntimeException("Unable to prepare RabbitMQ channel provider", ex);
         }
 
+        try {
+            channel = rabbitMqChannelProvider.getChannel();
+        } catch (Exception ex) {
+            throw new RuntimeException("Unable to get RabbitMQ channel from the provider", ex);
+        }
+
         if (initializer != null) {
-            Channel channel = getChannel();
-            if (channel != null) {
-                try {
-                    initializer.initialize(channel);
-                } catch (IOException ex) {
-                    throw new RuntimeException("Unable to execute initialization", ex);
-                } finally {
-                    rabbitMqChannelProvider.returnChannel(channel);
-                }
+            try {
+                initializer.initialize(channel);
+            } catch (IOException ex) {
+                throw new RuntimeException("Unable to execute initialization", ex);
             }
+        }
+
+        queueingConsumer = new QueueingConsumer(channel);
+
+        try {
+            channel.basicQos(prefetchCount);
+        } catch (IOException ex) {
+            throw new RuntimeException("Unable set quality of service", ex);
+        }
+
+        try {
+            channel.basicConsume(queueName, false, context.getThisComponentId(), queueingConsumer);
+        } catch (IOException ex) {
+            throw new RuntimeException("Unable to start consuming the queue", ex);
         }
     }
 
@@ -113,87 +134,81 @@ public class RabbitMqSpout extends BaseRichSpout {
             return;
         }
 
-        Channel channel = getChannel();
-        if (channel == null) {
-            return;
-        }
-
-        try {
-            for (int emitted = 0; emitted < prefetchCount; emitted++) {
-                GetResponse response = channel.basicGet(queueName, false);
-                if (response == null) { // no message retrieved
-                    Utils.sleep(emptyQueueSleepMillis);
-                    return;
-                } else {
-                    long messageId = response.getEnvelope().getDeliveryTag();
-                    StreamedTuple streamedTuple;
-                    try {
-                        streamedTuple = rabbitMqMessageScheme.convertToStreamedTuple(response);
-                    } catch (Exception ex) {
-                        LOGGER.error("Unable to convert RabbitMQ message", ex);
-                        collector.reportError(ex);
-                        channel.basicReject(messageId, false);
-                        continue;
-                    }
-                    if (streamedTuple == null) {
-                        LOGGER.debug("Filtered message with id: {}", messageId);
-                        channel.basicAck(messageId, false);
-                    } else {
-                        collector.emit(streamedTuple.getStreamId(), streamedTuple.getTuple(), messageId);
-                    }
-                }
+        for (int emitted = 0; emitted < prefetchCount; emitted++) {
+            Delivery delivery;
+            try {
+                delivery = queueingConsumer.nextDelivery(1000L);
+            } catch (ConsumerCancelledException | ShutdownSignalException | InterruptedException ex) {
+                LOGGER.error("Unable to get message from RabbitMQ", ex);
+                collector.reportError(ex);
+                return;
             }
-        } catch (IOException ex) {
-            LOGGER.error("Unable to execute channel command", ex);
-            collector.reportError(ex);
-        } finally {
-            rabbitMqChannelProvider.returnChannel(channel);
+
+            if (delivery == null) {
+                LOGGER.trace("There are no messages in the queue");
+                return;
+            }
+
+            Envelope envelope = delivery.getEnvelope();
+            long messageId = envelope.getDeliveryTag();
+
+            StreamedTuple streamedTuple;
+            try {
+                streamedTuple = rabbitMqMessageScheme.convertToStreamedTuple(envelope,
+                        delivery.getProperties(), delivery.getBody());
+            } catch (Exception ex) {
+                LOGGER.error("Unable to convert RabbitMQ message", ex);
+                collector.reportError(ex);
+                try {
+                    channel.basicReject(messageId, false);
+                } catch (IOException rejectEx) {
+                    LOGGER.error("Unable to reject message", rejectEx);
+                    collector.reportError(rejectEx);
+                }
+                return;
+            }
+
+            if (streamedTuple == null) {
+                LOGGER.trace("Filtered message with id: {}", messageId);
+                try {
+                    channel.basicAck(messageId, false);
+                } catch (IOException ackEx) {
+                    LOGGER.error("Unable to ack message", ackEx);
+                    collector.reportError(ackEx);
+                }
+            } else {
+                collector.emit(streamedTuple.getStreamId(), streamedTuple.getTuple(), messageId);
+            }
         }
     }
 
     @Override
     public void ack(Object msgId) {
-        processMessageId(msgId, (Channel channel, long deliveryTag) -> {
+        processMessageId(msgId, (long deliveryTag) -> {
             channel.basicAck(deliveryTag, false);
         });
     }
 
     @Override
     public void fail(Object msgId) {
-        processMessageId(msgId, (Channel channel, long deliveryTag) -> {
+        processMessageId(msgId, (long deliveryTag) -> {
             channel.basicReject(deliveryTag, requeueOnFail);
         });
     }
 
     private void processMessageId(Object msgId, ChannelAction channelAction) {
-        Channel channel = getChannel();
-        if (channel == null) {
-            return;
-        }
         long deliveryTag = (long) msgId;
         try {
-            channelAction.execute(channel, deliveryTag);
+            channelAction.execute(deliveryTag);
         } catch (IOException ex) {
             LOGGER.error("Unable to process message id: " + deliveryTag, ex);
             collector.reportError(ex);
-        } finally {
-            rabbitMqChannelProvider.returnChannel(channel);
         }
     }
 
     private interface ChannelAction {
 
-        void execute(Channel channel, long deliveryTag) throws IOException;
-    }
-
-    private Channel getChannel() {
-        try {
-            return rabbitMqChannelProvider.getChannel();
-        } catch (Exception ex) {
-            LOGGER.error("Unable to get RabbitMQ channel from the provider", ex);
-            collector.reportError(ex);
-            return null;
-        }
+        void execute(long deliveryTag) throws IOException;
     }
 
     @Override

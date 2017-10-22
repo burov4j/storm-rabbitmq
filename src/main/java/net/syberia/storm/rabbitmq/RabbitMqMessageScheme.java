@@ -15,7 +15,8 @@
  */
 package net.syberia.storm.rabbitmq;
 
-import com.rabbitmq.client.GetResponse;
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Envelope;
 import java.io.Serializable;
 import java.util.Map;
 import org.apache.storm.task.TopologyContext;
@@ -29,7 +30,7 @@ public interface RabbitMqMessageScheme extends Serializable {
     
     void prepare(Map config, TopologyContext context);
     
-    StreamedTuple convertToStreamedTuple(GetResponse response) throws Exception;
+    StreamedTuple convertToStreamedTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception;
     
     Map<String, Fields> getStreamsOutputFields();
     
