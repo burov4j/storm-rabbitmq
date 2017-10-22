@@ -138,7 +138,10 @@ public class RabbitMqSpout extends BaseRichSpout {
             Delivery delivery;
             try {
                 delivery = queueingConsumer.nextDelivery(1000L);
-            } catch (ConsumerCancelledException | ShutdownSignalException | InterruptedException ex) {
+            } catch (InterruptedException ex) {
+                LOGGER.info("The consumer interrupted");
+                return;
+            } catch (ConsumerCancelledException | ShutdownSignalException ex) {
                 LOGGER.error("Unable to get message from RabbitMQ", ex);
                 collector.reportError(ex);
                 return;
