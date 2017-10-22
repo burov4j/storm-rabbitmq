@@ -82,7 +82,6 @@ public class RabbitMqBolt extends BaseRichBolt {
             properties = tupleToRabbitMqMessageConverter.getProperties(input);
             messageBody = tupleToRabbitMqMessageConverter.getMessageBody(input);
         } catch (Exception ex) {
-            LOGGER.error("Unable to convert tuple to RabbitMQ message", ex);
             collector.reportError(ex);
             collector.fail(input);
             return;
@@ -92,7 +91,6 @@ public class RabbitMqBolt extends BaseRichBolt {
         try {
             channel = rabbitMqChannelProvider.getChannel();
         } catch (Exception ex) {
-            LOGGER.error("Unable to get RabbitMQ channel from the provider", ex);
             collector.reportError(ex);
             collector.fail(input);
             return;
@@ -101,7 +99,6 @@ public class RabbitMqBolt extends BaseRichBolt {
         try {
             channel.basicPublish(exchange, routingKey, properties, messageBody);
         } catch (IOException ex) {
-            LOGGER.error("Unable to publish RabbitMQ message", ex);
             collector.reportError(ex);
             collector.fail(input);
             return;

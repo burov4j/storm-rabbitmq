@@ -142,7 +142,6 @@ public class RabbitMqSpout extends BaseRichSpout {
                 LOGGER.info("The consumer interrupted");
                 return;
             } catch (ConsumerCancelledException | ShutdownSignalException ex) {
-                LOGGER.error("Unable to get message from RabbitMQ", ex);
                 collector.reportError(ex);
                 return;
             }
@@ -160,12 +159,10 @@ public class RabbitMqSpout extends BaseRichSpout {
                 streamedTuple = rabbitMqMessageScheme.convertToStreamedTuple(envelope,
                         delivery.getProperties(), delivery.getBody());
             } catch (Exception ex) {
-                LOGGER.error("Unable to convert RabbitMQ message", ex);
                 collector.reportError(ex);
                 try {
                     channel.basicReject(messageId, false);
                 } catch (IOException rejectEx) {
-                    LOGGER.error("Unable to reject message", rejectEx);
                     collector.reportError(rejectEx);
                 }
                 return;
@@ -176,7 +173,6 @@ public class RabbitMqSpout extends BaseRichSpout {
                 try {
                     channel.basicAck(messageId, false);
                 } catch (IOException ackEx) {
-                    LOGGER.error("Unable to ack message", ackEx);
                     collector.reportError(ackEx);
                 }
             } else {
@@ -204,7 +200,6 @@ public class RabbitMqSpout extends BaseRichSpout {
         try {
             channelAction.execute(deliveryTag);
         } catch (IOException ex) {
-            LOGGER.error("Unable to process message id: " + deliveryTag, ex);
             collector.reportError(ex);
         }
     }
