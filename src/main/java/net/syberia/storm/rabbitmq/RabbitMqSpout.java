@@ -55,7 +55,6 @@ public class RabbitMqSpout extends BaseRichSpout {
     private RabbitMqInitializer initializer;
 
     private String queueName;
-    private int prefetchCount;
     private boolean requeueOnFail;
     private SpoutOutputCollector collector;
 
@@ -81,11 +80,11 @@ public class RabbitMqSpout extends BaseRichSpout {
     @Override
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         this.queueName = ConfigFetcher.fetchStringProperty(conf, KEY_QUEUE_NAME);
-        this.prefetchCount = ConfigFetcher.fetchIntegerProperty(conf, KEY_PREFETCH_COUNT, 50);
-        if (this.prefetchCount < 1) {
-            throw new IllegalArgumentException("Invalid prefetch count: " + this.prefetchCount);
-        }
         this.requeueOnFail = ConfigFetcher.fetchBooleanProperty(conf, KEY_REQUEUE_ON_FAIL, false);
+        int prefetchCount = ConfigFetcher.fetchIntegerProperty(conf, KEY_PREFETCH_COUNT, 50);
+        if (prefetchCount < 1) {
+            throw new IllegalArgumentException("Invalid prefetch count: " + prefetchCount);
+        }
         this.collector = collector;
 
         this.rabbitMqMessageScheme.prepare(conf, context);
@@ -135,7 +134,7 @@ public class RabbitMqSpout extends BaseRichSpout {
             return;
         }
 
-        for (int emitted = 0; emitted < prefetchCount; emitted++) {
+        while (true) {
             Delivery delivery;
             try {
                 delivery = queueingConsumer.nextDelivery(1000L);
