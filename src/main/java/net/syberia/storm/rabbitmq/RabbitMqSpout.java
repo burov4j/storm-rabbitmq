@@ -15,12 +15,9 @@
  */
 package net.syberia.storm.rabbitmq;
 
+import com.rabbitmq.client.AlreadyClosedException;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.ConsumerCancelledException;
 import com.rabbitmq.client.Envelope;
-import com.rabbitmq.client.QueueingConsumer;
-import com.rabbitmq.client.QueueingConsumer.Delivery;
-import com.rabbitmq.client.ShutdownSignalException;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -30,7 +27,6 @@ import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseRichSpout;
 import org.apache.storm.tuple.Fields;
-import org.apache.storm.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +55,7 @@ public class RabbitMqSpout extends BaseRichSpout {
     private SpoutOutputCollector collector;
 
     private Channel channel;
-    QueueingConsumer queueingConsumer; // package-private for testing
+    AutorecoverableQueueingConsumer queueingConsumer; // package-private for testing
 
     private boolean active;
 
@@ -113,7 +109,7 @@ public class RabbitMqSpout extends BaseRichSpout {
             }
         }
 
-        queueingConsumer = new QueueingConsumer(channel);
+        queueingConsumer = new AutorecoverableQueueingConsumer(channel);
 
         try {
             channel.basicQos(prefetchCount);
@@ -135,33 +131,26 @@ public class RabbitMqSpout extends BaseRichSpout {
         }
 
         while (true) {
-            Delivery delivery;
+            RabbitMqMessage rabbitMqMessage;
             try {
-                delivery = queueingConsumer.nextDelivery(1000L);
+                rabbitMqMessage = queueingConsumer.nextMessage(1000L);
             } catch (InterruptedException ex) {
                 LOGGER.info("The consumer interrupted");
                 return;
-            } catch (ShutdownSignalException ex) {
-                collector.reportError(ex);
-                Utils.sleep(5000); // wait for RabbitMQ startup
-                return;
-            } catch (ConsumerCancelledException ex) {
-                collector.reportError(ex);
-                return;
             }
 
-            if (delivery == null) {
+            if (rabbitMqMessage == null) {
                 LOGGER.trace("There are no messages in the queue");
                 return;
             }
 
-            Envelope envelope = delivery.getEnvelope();
+            Envelope envelope = rabbitMqMessage.getEnvelope();
             long messageId = envelope.getDeliveryTag();
 
             StreamedTuple streamedTuple;
             try {
                 streamedTuple = rabbitMqMessageScheme.convertToStreamedTuple(envelope,
-                        delivery.getProperties(), delivery.getBody());
+                        rabbitMqMessage.getProperties(), rabbitMqMessage.getBody());
             } catch (Exception ex) {
                 collector.reportError(ex);
                 try {
@@ -203,6 +192,8 @@ public class RabbitMqSpout extends BaseRichSpout {
         long deliveryTag = (long) msgId;
         try {
             channelAction.execute(deliveryTag);
+        } catch (AlreadyClosedException ex) {
+            LOGGER.debug("Unable to process message id: " + deliveryTag, ex);
         } catch (IOException ex) {
             collector.reportError(ex);
         }
@@ -235,6 +226,8 @@ public class RabbitMqSpout extends BaseRichSpout {
     public void close() {
         try {
             this.rabbitMqChannelProvider.cleanup();
+        } catch (AlreadyClosedException ex) {
+            LOGGER.info("Connection is already closed");
         } catch (Exception ex) {
             LOGGER.error("Unable to cleanup RabbitMQ provider", ex);
         }
