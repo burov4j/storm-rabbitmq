@@ -96,6 +96,7 @@ public class RabbitMqChannelProvider implements Serializable {
         config.setJmxNamePrefix("ChannelPool");
         RabbitMqChannelPool channelPool = new RabbitMqChannelPool(channelFactory, config);
         channelPool.setMaxTotal(-1);
+        channelPool.setMaxIdle(-1);
         return channelPool;
     }
 
