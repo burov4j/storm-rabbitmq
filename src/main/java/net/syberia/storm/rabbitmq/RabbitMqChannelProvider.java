@@ -40,7 +40,7 @@ public class RabbitMqChannelProvider implements Serializable {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMqChannelProvider.class);
     
-    private static final Set<RabbitMqChannelProvider> knownProviders = new HashSet<>();
+    private static final Set<RabbitMqChannelProvider> KNOWN_PROVIDERS = new HashSet<>();
 
     private final RabbitMqConfig rabbitMqConfig;
 
@@ -62,7 +62,7 @@ public class RabbitMqChannelProvider implements Serializable {
     
     static synchronized RabbitMqChannelProvider withStormConfig(Map<String, Object> stormConf) {
         RabbitMqChannelProvider provider = new RabbitMqChannelProvider(stormConf);
-        for (RabbitMqChannelProvider knownProvider : knownProviders) {
+        for (RabbitMqChannelProvider knownProvider : KNOWN_PROVIDERS) {
             if (knownProvider.equals(provider)) {
                 return knownProvider;
             }
@@ -127,13 +127,13 @@ public class RabbitMqChannelProvider implements Serializable {
     }
     
     private void registerProviderIfAbsent() {
-        if (!knownProviders.contains(this)) {
-            knownProviders.add(this);
+        if (!KNOWN_PROVIDERS.contains(this)) {
+            KNOWN_PROVIDERS.add(this);
         }
     }
     
     private Object readResolve() {
-        for (RabbitMqChannelProvider provider : knownProviders) {
+        for (RabbitMqChannelProvider provider : KNOWN_PROVIDERS) {
             if (provider.equals(this)) {
                 return provider;
             }
