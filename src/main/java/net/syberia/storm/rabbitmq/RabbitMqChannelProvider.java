@@ -126,7 +126,7 @@ public class RabbitMqChannelProvider implements Serializable {
         registerProviderIfAbsent();
     }
     
-    private void registerProviderIfAbsent() {
+    private synchronized void registerProviderIfAbsent() {
         if (!KNOWN_PROVIDERS.contains(this)) {
             KNOWN_PROVIDERS.add(this);
         }
