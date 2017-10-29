@@ -27,6 +27,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -35,6 +37,8 @@ import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 public class RabbitMqChannelProvider implements Serializable {
 
     private static final long serialVersionUID = 8824907115492553548L;
+    
+    private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMqChannelProvider.class);
     
     private static final Set<RabbitMqChannelProvider> knownProviders = new HashSet<>();
 
@@ -68,6 +72,7 @@ public class RabbitMqChannelProvider implements Serializable {
 
     synchronized void prepare() throws IOException, TimeoutException {
         if (rabbitMqChannelPool == null) {
+            LOGGER.info("Creating RabbitMQ channel pool...");
             ConnectionFactory rabbitMqConnectionFactory = createConnectionFactory();
             if (rabbitMqConfig.hasAddresses()) {
                 Address[] addresses = Address.parseAddresses(rabbitMqConfig.getAddresses());
@@ -76,6 +81,7 @@ public class RabbitMqChannelProvider implements Serializable {
                 this.rabbitMqChannelFactory = new RabbitMqChannelFactory(rabbitMqConnectionFactory);
             }
             this.rabbitMqChannelPool = createRabbitMqChannelPool(rabbitMqChannelFactory);
+            LOGGER.info("RabbitMQ channel pool was created");
         }
     }
 
