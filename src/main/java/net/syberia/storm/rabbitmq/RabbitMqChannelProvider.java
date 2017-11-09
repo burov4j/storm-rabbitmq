@@ -71,7 +71,7 @@ public class RabbitMqChannelProvider implements Serializable {
     }
 
     synchronized void prepare() throws IOException, TimeoutException {
-        if (rabbitMqChannelPool == null) {
+        if (rabbitMqChannelPool == null || rabbitMqChannelPool.isClosed()) {
             LOGGER.info("Creating RabbitMQ channel pool...");
             ConnectionFactory rabbitMqConnectionFactory = createConnectionFactory();
             if (rabbitMqConfig.hasAddresses()) {
