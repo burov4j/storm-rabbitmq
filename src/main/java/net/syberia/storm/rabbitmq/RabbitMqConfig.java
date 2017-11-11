@@ -18,13 +18,14 @@ package net.syberia.storm.rabbitmq;
 import com.rabbitmq.client.ConnectionFactory;
 import java.io.Serializable;
 import java.util.Map;
-import java.util.Objects;
+import lombok.EqualsAndHashCode;
 import org.apache.storm.shade.org.apache.commons.lang.StringUtils;
 
 /**
  *
  * @author Andrey Burov
  */
+@EqualsAndHashCode
 public class RabbitMqConfig implements Serializable {
 
     private static final long serialVersionUID = 5275552557426635758L;
@@ -117,52 +118,6 @@ public class RabbitMqConfig implements Serializable {
 
     void setRequestedHeartbeat(int requestedHeartbeat) {
         this.requestedHeartbeat = requestedHeartbeat;
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 3;
-        hash = 11 * hash + Objects.hashCode(this.host);
-        hash = 11 * hash + this.port;
-        hash = 11 * hash + Objects.hashCode(this.addresses);
-        hash = 11 * hash + Objects.hashCode(this.username);
-        hash = 11 * hash + Objects.hashCode(this.password);
-        hash = 11 * hash + Objects.hashCode(this.virtualHost);
-        hash = 11 * hash + this.requestedHeartbeat;
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final RabbitMqConfig other = (RabbitMqConfig) obj;
-        if (this.port != other.port) {
-            return false;
-        }
-        if (this.requestedHeartbeat != other.requestedHeartbeat) {
-            return false;
-        }
-        if (!Objects.equals(this.host, other.host)) {
-            return false;
-        }
-        if (!Objects.equals(this.addresses, other.addresses)) {
-            return false;
-        }
-        if (!Objects.equals(this.username, other.username)) {
-            return false;
-        }
-        if (!Objects.equals(this.password, other.password)) {
-            return false;
-        }
-        return Objects.equals(this.virtualHost, other.virtualHost);
     }
 
 }

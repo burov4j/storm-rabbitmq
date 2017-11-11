@@ -18,6 +18,7 @@ package net.syberia.storm.rabbitmq;
 import java.util.HashMap;
 import java.util.Map;
 import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import org.junit.Test;
 
 /**
@@ -48,6 +49,38 @@ public class RabbitMqConfigTest {
         assertEquals(password, rabbitMqConfig.getPassword());
         assertEquals(username, rabbitMqConfig.getUsername());
         assertEquals(virtualHost, rabbitMqConfig.getVirtualHost());
+    }
+    
+    @Test
+    public void equals() {
+        RabbitMqConfig rabbitMqConfig1 = new RabbitMqConfig(),
+                rabbitMqConfig2 = new RabbitMqConfig();
+        assertEquals(rabbitMqConfig1, rabbitMqConfig2);
+    }
+    
+    @Test
+    public void notEquals() {
+        Map<String, Object> rabbitMqConf = new HashMap<>(1);
+        rabbitMqConf.put(RabbitMqConfig.KEY_HOST, "anotherHost");
+        RabbitMqConfig rabbitMqConfig1 = new RabbitMqConfig(),
+                rabbitMqConfig2 = new RabbitMqConfig(rabbitMqConf);
+        assertNotEquals(rabbitMqConfig1, rabbitMqConfig2);
+    }
+    
+    @Test
+    public void hashCodeEquals() {
+        RabbitMqConfig rabbitMqConfig1 = new RabbitMqConfig(),
+                rabbitMqConfig2 = new RabbitMqConfig();
+        assertEquals(rabbitMqConfig1.hashCode(), rabbitMqConfig2.hashCode());
+    }
+    
+    @Test
+    public void hashCodeNotEquals() {
+        Map<String, Object> rabbitMqConf = new HashMap<>(1);
+        rabbitMqConf.put(RabbitMqConfig.KEY_HOST, "anotherHost");
+        RabbitMqConfig rabbitMqConfig1 = new RabbitMqConfig(),
+                rabbitMqConfig2 = new RabbitMqConfig(rabbitMqConf);
+        assertNotEquals(rabbitMqConfig1.hashCode(), rabbitMqConfig2.hashCode());
     }
 
 }

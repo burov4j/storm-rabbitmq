@@ -19,9 +19,12 @@ import com.rabbitmq.client.Address;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ConnectionFactory;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import org.junit.Test;
 import static junit.framework.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -85,6 +88,40 @@ public class RabbitMqChannelProviderTest extends RabbitMqTest {
         Channel channel = rabbitMqChannelProvider.getChannel();
         rabbitMqChannelProvider.returnChannel(channel);
         rabbitMqChannelProvider.cleanup();
+    }
+    
+    @Test
+    public void equals() throws Exception {
+        RabbitMqChannelProvider provider1 = new RabbitMqChannelProvider(),
+                provider2 = new RabbitMqChannelProvider();
+        assertEquals(provider1, provider2);
+    }
+    
+    @Test
+    public void notEquals() {
+        Map<String, Object> rabbitMqConf = new HashMap<>(1);
+        rabbitMqConf.put(RabbitMqConfig.KEY_HOST, "anotherHost");
+        RabbitMqConfig rabbitMqConfig = new RabbitMqConfig(rabbitMqConf);
+        RabbitMqChannelProvider provider1 = new RabbitMqChannelProvider(),
+                provider2 = new RabbitMqChannelProvider(rabbitMqConfig);
+        assertNotEquals(provider1, provider2);
+    }
+    
+    @Test
+    public void hashCodeEquals() throws Exception {
+        RabbitMqChannelProvider provider1 = new RabbitMqChannelProvider(),
+                provider2 = new RabbitMqChannelProvider();
+        assertEquals(provider1.hashCode(), provider2.hashCode());
+    }
+    
+    @Test
+    public void hashCodeNotEquals() {
+        Map<String, Object> rabbitMqConf = new HashMap<>(1);
+        rabbitMqConf.put(RabbitMqConfig.KEY_HOST, "anotherHost");
+        RabbitMqConfig rabbitMqConfig = new RabbitMqConfig(rabbitMqConf);
+        RabbitMqChannelProvider provider1 = new RabbitMqChannelProvider(),
+                provider2 = new RabbitMqChannelProvider(rabbitMqConfig);
+        assertNotEquals(provider1.hashCode(), provider2.hashCode());
     }
 
 }

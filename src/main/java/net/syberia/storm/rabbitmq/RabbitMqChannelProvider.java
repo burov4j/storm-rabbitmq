@@ -23,9 +23,9 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
+import lombok.EqualsAndHashCode;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Andrey Burov
  */
+@EqualsAndHashCode(of = "rabbitMqConfig")
 public class RabbitMqChannelProvider implements Serializable {
 
     private static final long serialVersionUID = 8824907115492553548L;
@@ -139,28 +140,6 @@ public class RabbitMqChannelProvider implements Serializable {
             }
         }
         return this;
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 3;
-        hash = 67 * hash + Objects.hashCode(this.rabbitMqConfig);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        RabbitMqChannelProvider other = (RabbitMqChannelProvider) obj;
-        return Objects.equals(this.rabbitMqConfig, other.rabbitMqConfig);
     }
 
 }
