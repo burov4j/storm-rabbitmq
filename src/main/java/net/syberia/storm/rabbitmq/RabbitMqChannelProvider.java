@@ -38,9 +38,9 @@ import org.slf4j.LoggerFactory;
 public class RabbitMqChannelProvider implements Serializable {
 
     private static final long serialVersionUID = 8824907115492553548L;
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMqChannelProvider.class);
-    
+
     private static final Set<RabbitMqChannelProvider> KNOWN_PROVIDERS = new HashSet<>();
 
     private final RabbitMqConfig rabbitMqConfig;
@@ -48,30 +48,36 @@ public class RabbitMqChannelProvider implements Serializable {
     private transient RabbitMqChannelFactory rabbitMqChannelFactory;
     private transient RabbitMqChannelPool rabbitMqChannelPool;
 
-    RabbitMqChannelProvider() {
+    RabbitMqChannelProvider() { // for testing
         this(new RabbitMqConfig());
     }
-    
-    private RabbitMqChannelProvider(Map<String, Object> stormConf) {
-        this(new RabbitMqConfig(stormConf));
+
+    static RabbitMqChannelProvider withStormConfig(Map<String, Object> stormConf) {
+        RabbitMqConfig rabbitMqConfig = new RabbitMqConfig(stormConf);
+        return withRabbitMqConfig(rabbitMqConfig);
     }
 
-    public RabbitMqChannelProvider(RabbitMqConfig rabbitMqConfig) {
-        this.rabbitMqConfig = rabbitMqConfig;
-        registerProviderIfAbsent();
+    private Object readResolve() {
+        return withRabbitMqConfig(rabbitMqConfig);
     }
-    
-    static synchronized RabbitMqChannelProvider withStormConfig(Map<String, Object> stormConf) {
-        RabbitMqChannelProvider provider = new RabbitMqChannelProvider(stormConf);
-        for (RabbitMqChannelProvider knownProvider : KNOWN_PROVIDERS) {
-            if (knownProvider.equals(provider)) {
-                return knownProvider;
-            }
+
+    public static synchronized RabbitMqChannelProvider withRabbitMqConfig(RabbitMqConfig rabbitMqConfig) {
+        RabbitMqChannelProvider providerWithConfig = KNOWN_PROVIDERS.stream()
+                .filter(provider -> provider.rabbitMqConfig.equals(rabbitMqConfig))
+                .findFirst()
+                .orElse(null);
+        if (providerWithConfig == null) {
+            providerWithConfig = new RabbitMqChannelProvider(rabbitMqConfig);
+            KNOWN_PROVIDERS.add(providerWithConfig);
         }
-        return provider;
+        return providerWithConfig;
     }
 
-    synchronized void prepare() throws IOException, TimeoutException {
+    RabbitMqChannelProvider(RabbitMqConfig rabbitMqConfig) { // package-private for testing
+        this.rabbitMqConfig = rabbitMqConfig;
+    }
+
+    public synchronized void prepare() throws IOException, TimeoutException {
         if (rabbitMqChannelPool == null || rabbitMqChannelPool.isClosed()) {
             LOGGER.info("Creating RabbitMQ channel pool...");
             ConnectionFactory rabbitMqConnectionFactory = createConnectionFactory();
@@ -107,39 +113,23 @@ public class RabbitMqChannelProvider implements Serializable {
         return channelPool;
     }
 
-    Channel getChannel() throws Exception {
+    public Channel getChannel() throws Exception {
         return rabbitMqChannelPool.borrowObject();
     }
 
-    void returnChannel(Channel channel) {
+    public void returnChannel(Channel channel) {
         rabbitMqChannelPool.returnObject(channel);
     }
 
-    void cleanup() throws Exception {
+    public void cleanup() throws Exception {
         if (rabbitMqChannelPool != null) {
             rabbitMqChannelPool.close();
             rabbitMqChannelFactory.close();
         }
     }
-    
+
     private void readObject(ObjectInputStream objectInputStream) throws IOException, ClassNotFoundException {
         objectInputStream.defaultReadObject();
-        registerProviderIfAbsent();
-    }
-    
-    private synchronized void registerProviderIfAbsent() {
-        if (!KNOWN_PROVIDERS.contains(this)) {
-            KNOWN_PROVIDERS.add(this);
-        }
-    }
-    
-    private Object readResolve() {
-        for (RabbitMqChannelProvider provider : KNOWN_PROVIDERS) {
-            if (provider.equals(this)) {
-                return provider;
-            }
-        }
-        return this;
     }
 
 }
