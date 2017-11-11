@@ -75,6 +75,26 @@ public class ConfigFetcherTest {
     }
     
     @Test
+    public void fetchLongPropertyExists() {
+        Map<String, Object> conf = new HashMap<>(1);
+        String propertyKey = "propertyKey";
+        long propertyValue = 445342L;
+        conf.put(propertyKey, propertyValue);
+        assertEquals(propertyValue, ConfigFetcher.fetchLongProperty(conf, propertyKey, 556634L));
+    }
+
+    @Test
+    public void fetchLongPropertyNotExists() {
+        Map<String, Object> conf = new HashMap<>(1);
+        String propertyKey = "propertyKey",
+                anotherKey = "anotherKey";
+        long propertyValue = 445342L,
+                anotherValue = 556634L;
+        conf.put(propertyKey, propertyValue);
+        assertEquals(anotherValue, ConfigFetcher.fetchLongProperty(conf, anotherKey, anotherValue));
+    }
+    
+    @Test
     public void fetchIntegerPropertyButLong() {
         Map<String, Object> conf = new HashMap<>(1);
         String propertyKey = "propertyKey";
