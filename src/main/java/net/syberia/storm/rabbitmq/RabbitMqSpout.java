@@ -43,6 +43,7 @@ public class RabbitMqSpout extends BaseRichSpout {
     public static final String KEY_QUEUE_NAME = "rabbitmq.queue_name";
     public static final String KEY_PREFETCH_COUNT = "rabbitmq.prefetch_count";
     public static final String KEY_REQUEUE_ON_FAIL = "rabbitmq.requeue_on_fail";
+    public static final String KEY_AUTO_ACK = "rabbitmq.auto_ack";
 
     private final RabbitMqMessageScheme rabbitMqMessageScheme;
 
@@ -52,6 +53,7 @@ public class RabbitMqSpout extends BaseRichSpout {
 
     private String queueName;
     private boolean requeueOnFail;
+    private boolean autoAck;
     private SpoutOutputCollector collector;
 
     private Channel channel;
@@ -77,6 +79,7 @@ public class RabbitMqSpout extends BaseRichSpout {
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         this.queueName = ConfigFetcher.fetchStringProperty(conf, KEY_QUEUE_NAME);
         this.requeueOnFail = ConfigFetcher.fetchBooleanProperty(conf, KEY_REQUEUE_ON_FAIL, false);
+        this.autoAck = ConfigFetcher.fetchBooleanProperty(conf, KEY_AUTO_ACK, false);
         int prefetchCount = ConfigFetcher.fetchIntegerProperty(conf, KEY_PREFETCH_COUNT, 50);
         if (prefetchCount < 1) {
             throw new IllegalArgumentException("Invalid prefetch count: " + prefetchCount);
@@ -118,7 +121,7 @@ public class RabbitMqSpout extends BaseRichSpout {
         }
 
         try {
-            channel.basicConsume(queueName, false, context.getThisComponentId(), queueingConsumer);
+            channel.basicConsume(queueName, autoAck, context.getThisComponentId(), queueingConsumer);
         } catch (IOException ex) {
             throw new RuntimeException("Unable to start consuming the queue", ex);
         }
@@ -189,6 +192,9 @@ public class RabbitMqSpout extends BaseRichSpout {
     }
 
     private void processMessageId(Object msgId, ChannelAction channelAction) {
+        if (autoAck) {
+            return;
+        }
         long deliveryTag = (long) msgId;
         try {
             channelAction.execute(deliveryTag);
