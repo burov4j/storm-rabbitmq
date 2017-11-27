@@ -136,7 +136,7 @@ public class RabbitMqSpout extends BaseRichSpout {
         while (true) {
             RabbitMqMessage rabbitMqMessage;
             try {
-                rabbitMqMessage = queueingConsumer.nextMessage(1000L);
+                rabbitMqMessage = queueingConsumer.nextMessage(1L);
             } catch (InterruptedException ex) {
                 LOGGER.info("The consumer interrupted");
                 return;
