@@ -133,47 +133,45 @@ public class RabbitMqSpout extends BaseRichSpout {
             return;
         }
 
-        while (true) {
-            RabbitMqMessage rabbitMqMessage;
+        RabbitMqMessage rabbitMqMessage;
+        try {
+            rabbitMqMessage = queueingConsumer.nextMessage(1L);
+        } catch (InterruptedException ex) {
+            LOGGER.info("The consumer interrupted");
+            return;
+        }
+
+        if (rabbitMqMessage == null) {
+            LOGGER.trace("There are no messages in the queue");
+            return;
+        }
+
+        Envelope envelope = rabbitMqMessage.getEnvelope();
+        long messageId = envelope.getDeliveryTag();
+
+        StreamedTuple streamedTuple;
+        try {
+            streamedTuple = rabbitMqMessageScheme.convertToStreamedTuple(envelope,
+                    rabbitMqMessage.getProperties(), rabbitMqMessage.getBody());
+        } catch (Exception ex) {
+            collector.reportError(ex);
             try {
-                rabbitMqMessage = queueingConsumer.nextMessage(1L);
-            } catch (InterruptedException ex) {
-                LOGGER.info("The consumer interrupted");
-                return;
+                channel.basicReject(messageId, false);
+            } catch (IOException rejectEx) {
+                collector.reportError(rejectEx);
             }
+            return;
+        }
 
-            if (rabbitMqMessage == null) {
-                LOGGER.trace("There are no messages in the queue");
-                return;
-            }
-
-            Envelope envelope = rabbitMqMessage.getEnvelope();
-            long messageId = envelope.getDeliveryTag();
-
-            StreamedTuple streamedTuple;
+        if (streamedTuple == null) {
+            LOGGER.trace("Filtered message with id: {}", messageId);
             try {
-                streamedTuple = rabbitMqMessageScheme.convertToStreamedTuple(envelope,
-                        rabbitMqMessage.getProperties(), rabbitMqMessage.getBody());
-            } catch (Exception ex) {
-                collector.reportError(ex);
-                try {
-                    channel.basicReject(messageId, false);
-                } catch (IOException rejectEx) {
-                    collector.reportError(rejectEx);
-                }
-                return;
+                channel.basicAck(messageId, false);
+            } catch (IOException ackEx) {
+                collector.reportError(ackEx);
             }
-
-            if (streamedTuple == null) {
-                LOGGER.trace("Filtered message with id: {}", messageId);
-                try {
-                    channel.basicAck(messageId, false);
-                } catch (IOException ackEx) {
-                    collector.reportError(ackEx);
-                }
-            } else {
-                collector.emit(streamedTuple.getStreamId(), streamedTuple.getTuple(), messageId);
-            }
+        } else {
+            collector.emit(streamedTuple.getStreamId(), streamedTuple.getTuple(), messageId);
         }
     }
 
