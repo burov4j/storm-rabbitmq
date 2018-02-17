@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import lombok.EqualsAndHashCode;
-import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +45,6 @@ public class RabbitMqChannelProvider implements Serializable {
     private final RabbitMqConfig rabbitMqConfig;
 
     private transient RabbitMqChannelFactory rabbitMqChannelFactory;
-    private transient RabbitMqChannelPool rabbitMqChannelPool;
 
     RabbitMqChannelProvider() { // for testing
         this(new RabbitMqConfig());
@@ -78,8 +76,8 @@ public class RabbitMqChannelProvider implements Serializable {
     }
 
     public synchronized void prepare() throws IOException, TimeoutException {
-        if (rabbitMqChannelPool == null || rabbitMqChannelPool.isClosed()) {
-            LOGGER.info("Creating RabbitMQ channel pool...");
+        if (rabbitMqChannelFactory == null || !rabbitMqChannelFactory.isOpen()) {
+            LOGGER.info("Creating RabbitMQ channel factory...");
             ConnectionFactory rabbitMqConnectionFactory = createConnectionFactory();
             if (rabbitMqConfig.hasAddresses()) {
                 Address[] addresses = Address.parseAddresses(rabbitMqConfig.getAddresses());
@@ -87,8 +85,7 @@ public class RabbitMqChannelProvider implements Serializable {
             } else {
                 this.rabbitMqChannelFactory = new RabbitMqChannelFactory(rabbitMqConnectionFactory);
             }
-            this.rabbitMqChannelPool = createRabbitMqChannelPool(rabbitMqChannelFactory);
-            LOGGER.info("RabbitMQ channel pool was created");
+            LOGGER.info("RabbitMQ channel factory was created");
         }
     }
 
@@ -103,27 +100,12 @@ public class RabbitMqChannelProvider implements Serializable {
         return rabbitMqConnectionFactory;
     }
 
-    static RabbitMqChannelPool createRabbitMqChannelPool(RabbitMqChannelFactory channelFactory) {
-        GenericObjectPoolConfig config = new GenericObjectPoolConfig();
-        config.setJmxNameBase("storm-rabbitmq:name=");
-        config.setJmxNamePrefix("ChannelPool");
-        RabbitMqChannelPool channelPool = new RabbitMqChannelPool(channelFactory, config);
-        channelPool.setMaxTotal(-1);
-        channelPool.setMaxIdle(-1);
-        return channelPool;
-    }
-
     public Channel getChannel() throws Exception {
-        return rabbitMqChannelPool.borrowObject();
-    }
-
-    public void returnChannel(Channel channel) {
-        rabbitMqChannelPool.returnObject(channel);
+        return rabbitMqChannelFactory.createChannel();
     }
 
     public void cleanup() throws Exception {
-        if (rabbitMqChannelPool != null) {
-            rabbitMqChannelPool.close();
+        if (rabbitMqChannelFactory != null) {
             rabbitMqChannelFactory.close();
         }
     }

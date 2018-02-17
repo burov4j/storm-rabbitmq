@@ -93,7 +93,6 @@ public class RabbitMqChannelProviderTest extends RabbitMqTest {
         doReturn(mockConnectionFactory).when(rabbitMqChannelProvider).createConnectionFactory();
         rabbitMqChannelProvider.prepare();
         Channel channel = rabbitMqChannelProvider.getChannel();
-        rabbitMqChannelProvider.returnChannel(channel);
         rabbitMqChannelProvider.cleanup();
     }
 

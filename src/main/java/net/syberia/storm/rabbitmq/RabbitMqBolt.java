@@ -44,6 +44,7 @@ public class RabbitMqBolt extends BaseRichBolt {
     private final TupleToRabbitMqMessageConverter tupleToRabbitMqMessageConverter;
     
     private RabbitMqChannelProvider rabbitMqChannelProvider;
+    private Channel channel;
 
     private boolean mandatory;
     private boolean immediate;
@@ -78,6 +79,12 @@ public class RabbitMqBolt extends BaseRichBolt {
         } catch (IOException | TimeoutException ex) {
             throw new RuntimeException("Unable to prepare RabbitMQ channel provider", ex);
         }
+
+        try {
+            channel = rabbitMqChannelProvider.getChannel();
+        } catch (Exception ex) {
+            throw new RuntimeException("Unable to get RabbitMQ channel from the provider", ex);
+        }
     }
 
     @Override
@@ -96,23 +103,12 @@ public class RabbitMqBolt extends BaseRichBolt {
             return;
         }
 
-        Channel channel;
-        try {
-            channel = rabbitMqChannelProvider.getChannel();
-        } catch (Exception ex) {
-            collector.reportError(ex);
-            collector.fail(input);
-            return;
-        }
-
         try {
             channel.basicPublish(exchange, routingKey, mandatory, immediate, properties, messageBody);
         } catch (IOException ex) {
             collector.reportError(ex);
             collector.fail(input);
             return;
-        } finally {
-            rabbitMqChannelProvider.returnChannel(channel);
         }
         
         collector.ack(input);

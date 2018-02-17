@@ -21,15 +21,12 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
-import org.apache.commons.pool2.BasePooledObjectFactory;
-import org.apache.commons.pool2.PooledObject;
-import org.apache.commons.pool2.impl.DefaultPooledObject;
 
 /**
  *
  * @author Andrey Burov
  */
-class RabbitMqChannelFactory extends BasePooledObjectFactory<Channel> implements AutoCloseable {
+class RabbitMqChannelFactory implements AutoCloseable {
 
     private final Connection rabbitMqConnection;
 
@@ -41,19 +38,12 @@ class RabbitMqChannelFactory extends BasePooledObjectFactory<Channel> implements
         this.rabbitMqConnection = rabbitMqConnectionFactory.newConnection(addresses);
     }
 
-    @Override
-    public Channel create() throws Exception {
+    public Channel createChannel() throws Exception {
         return this.rabbitMqConnection.createChannel();
     }
 
-    @Override
-    public PooledObject<Channel> wrap(Channel rabbitMqChannel) {
-        return new DefaultPooledObject<>(rabbitMqChannel);
-    }
-
-    @Override
-    public void destroyObject(PooledObject<Channel> pooledChannel) throws Exception {
-        pooledChannel.getObject().close();
+    public boolean isOpen() {
+        return this.rabbitMqConnection.isOpen();
     }
 
     @Override

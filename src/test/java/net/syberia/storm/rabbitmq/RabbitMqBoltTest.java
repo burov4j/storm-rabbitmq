@@ -83,7 +83,6 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
         rabbitMqBolt.cleanup();
         verify(mockChannel, times(1)).basicPublish(exchange, routingKey, true, true, properties, messageBody);
         verify(mockOutputCollector, times(1)).ack(mockTuple);
-        verify(rabbitMqChannelProvider, times(1)).returnChannel(mockChannel);
         verify(rabbitMqChannelProvider, times(1)).cleanup();
     }
 
@@ -99,15 +98,11 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
         }
     }
 
-    @Test
+    @Test(expected = Exception.class)
     public void unableToGetChannel() throws Exception {
         doThrow(Exception.class).when(rabbitMqChannelProvider).getChannel();
         RabbitMqBolt rabbitMqBolt = new RabbitMqBolt(rabbitMqChannelProvider, new EmptyTupleToRabbitMqMessageConverter());
         rabbitMqBolt.prepare(Collections.emptyMap(), null, mockOutputCollector);
-        Tuple tuple = mock(Tuple.class);
-        rabbitMqBolt.execute(tuple);
-        verify(mockOutputCollector, times(1)).reportError(any(Exception.class));
-        verify(mockOutputCollector, times(1)).fail(tuple);
     }
 
     @Test
@@ -119,7 +114,6 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
         rabbitMqBolt.execute(tuple);
         verify(mockOutputCollector, times(1)).reportError(any(IOException.class));
         verify(mockOutputCollector, times(1)).fail(tuple);
-        verify(rabbitMqChannelProvider, times(1)).returnChannel(mockChannel);
     }
 
     @Test
