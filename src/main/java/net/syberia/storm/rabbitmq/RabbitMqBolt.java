@@ -20,23 +20,22 @@ import com.rabbitmq.client.Channel;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
+
+import lombok.extern.slf4j.Slf4j;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseRichBolt;
 import org.apache.storm.tuple.Tuple;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author Andrey Burov
  */
+@Slf4j
 public class RabbitMqBolt extends BaseRichBolt {
 
     private static final long serialVersionUID = 377563808237437264L;
-    
-    private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMqBolt.class);
 
     public static final String KEY_MANDATORY = "rabbitmq.mandatory";
     public static final String KEY_IMMEDIATE = "rabbitmq.immediate";
@@ -124,7 +123,7 @@ public class RabbitMqBolt extends BaseRichBolt {
         try {
             this.rabbitMqChannelProvider.cleanup();
         } catch (Exception ex) {
-            LOGGER.error("Unable to cleanup RabbitMQ provider", ex);
+            log.error("Unable to cleanup RabbitMQ provider", ex);
         }
         this.tupleToRabbitMqMessageConverter.cleanup();
     }

@@ -24,35 +24,35 @@ import java.util.Map;
 class ConfigFetcher {
 
     private ConfigFetcher() {
-        super();
+        // no operation
     }
 
-    public static String fetchStringProperty(Map<String, Object> config, String key) {
+    public static String fetchStringProperty(Map config, String key) {
         return fetchStringProperty(config, key, null);
     }
 
-    public static String fetchStringProperty(Map<String, Object> config, String key, String defaultValue) {
+    public static String fetchStringProperty(Map config, String key, String defaultValue) {
         return fetchProperty(config, key, defaultValue);
     }
 
-    public static int fetchIntegerProperty(Map<String, Object> config, String key, int defaultValue) {
+    public static int fetchIntegerProperty(Map config, String key, int defaultValue) {
         return fetchNumberProperty(config, key, defaultValue).intValue();
     }
     
-    public static long fetchLongProperty(Map<String, Object> config, String key, long defaultValue) {
+    public static long fetchLongProperty(Map config, String key, long defaultValue) {
         return fetchNumberProperty(config, key, defaultValue).longValue();
     }
     
-    private static Number fetchNumberProperty(Map<String, Object> config, String key, Number defaultValue) {
+    private static Number fetchNumberProperty(Map config, String key, Number defaultValue) {
         return fetchProperty(config, key, defaultValue);
     }
 
-    public static boolean fetchBooleanProperty(Map<String, Object> config, String key, boolean defaultValue) {
+    public static boolean fetchBooleanProperty(Map config, String key, boolean defaultValue) {
         return fetchProperty(config, key, defaultValue);
     }
 
-    private static <T> T fetchProperty(Map<String, Object> config, String key, T defaultValue) {
-        T value = (T) config.get(key);
+    private static <T> T fetchProperty(Map config, String key, T defaultValue) {
+        Object value = config.get(key);
         if (value == null) {
             if (defaultValue == null) {
                 throw new IllegalArgumentException("The property is not specified: " + key);
@@ -60,7 +60,8 @@ class ConfigFetcher {
                 return defaultValue;
             }
         } else {
-            return value;
+            //noinspection unchecked
+            return (T) value;
         }
     }
 

@@ -42,7 +42,7 @@ class EmptyRabbitMqMessageScheme implements RabbitMqMessageScheme {
 
     @Override
     public Map<String, Fields> getStreamsOutputFields() {
-        return Collections.EMPTY_MAP;
+        return Collections.emptyMap();
     }
 
     @Override

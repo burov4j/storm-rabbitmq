@@ -24,16 +24,15 @@ import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  * @author Andrey Burov
  */
+@Slf4j
 class AutorecoverableQueueingConsumer extends DefaultConsumer {
-    
-    private static final Logger LOGGER = LoggerFactory.getLogger(AutorecoverableQueueingConsumer.class);
     
     private final BlockingQueue<RabbitMqMessage> queue = new LinkedBlockingQueue<>();
     
@@ -44,9 +43,9 @@ class AutorecoverableQueueingConsumer extends DefaultConsumer {
     @Override
     public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig) {
         if (sig.isInitiatedByApplication()) {
-            LOGGER.info("Handled shutdown signal");
+            log.info("Handled shutdown signal");
         } else {
-            LOGGER.error("Handled shutdown signal", sig);
+            log.error("Handled shutdown signal", sig);
         }
     }
 

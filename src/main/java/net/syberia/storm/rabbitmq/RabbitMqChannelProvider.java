@@ -26,19 +26,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import lombok.EqualsAndHashCode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  * @author Andrey Burov
  */
+@Slf4j
 @EqualsAndHashCode(of = "rabbitMqConfig")
 public class RabbitMqChannelProvider implements Serializable {
 
     private static final long serialVersionUID = 8824907115492553548L;
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMqChannelProvider.class);
 
     private static final Set<RabbitMqChannelProvider> KNOWN_PROVIDERS = new HashSet<>();
 
@@ -50,7 +48,7 @@ public class RabbitMqChannelProvider implements Serializable {
         this(new RabbitMqConfig());
     }
 
-    static RabbitMqChannelProvider withStormConfig(Map<String, Object> stormConf) {
+    static RabbitMqChannelProvider withStormConfig(Map stormConf) {
         RabbitMqConfig rabbitMqConfig = new RabbitMqConfig(stormConf);
         return withRabbitMqConfig(rabbitMqConfig);
     }
@@ -77,7 +75,7 @@ public class RabbitMqChannelProvider implements Serializable {
 
     public synchronized void prepare() throws IOException, TimeoutException {
         if (rabbitMqChannelFactory == null || !rabbitMqChannelFactory.isOpen()) {
-            LOGGER.info("Creating RabbitMQ channel factory...");
+            log.info("Creating RabbitMQ channel factory...");
             ConnectionFactory rabbitMqConnectionFactory = createConnectionFactory();
             if (rabbitMqConfig.hasAddresses()) {
                 Address[] addresses = Address.parseAddresses(rabbitMqConfig.getAddresses());
@@ -85,7 +83,7 @@ public class RabbitMqChannelProvider implements Serializable {
             } else {
                 this.rabbitMqChannelFactory = new RabbitMqChannelFactory(rabbitMqConnectionFactory);
             }
-            LOGGER.info("RabbitMQ channel factory was created");
+            log.info("RabbitMQ channel factory was created");
         }
     }
 

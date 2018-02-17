@@ -47,10 +47,10 @@ public class RabbitMqConfig implements Serializable {
     private int requestedHeartbeat = ConnectionFactory.DEFAULT_HEARTBEAT;
 
     RabbitMqConfig() {
-        super();
+        // no operation
     }
 
-    public RabbitMqConfig(Map<String, Object> rabbitMqConfig) {
+    public RabbitMqConfig(Map rabbitMqConfig) {
         this.host = ConfigFetcher.fetchStringProperty(rabbitMqConfig, KEY_HOST, this.host);
         this.port = ConfigFetcher.fetchIntegerProperty(rabbitMqConfig, KEY_PORT, this.port);
         this.addresses = ConfigFetcher.fetchStringProperty(rabbitMqConfig, KEY_ADDRESSES, this.addresses);

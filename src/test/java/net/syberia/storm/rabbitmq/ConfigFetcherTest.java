@@ -107,7 +107,7 @@ public class ConfigFetcherTest {
     public void fetchBooleanPropertyExists() {
         Map<String, Object> conf = new HashMap<>(1);
         String propertyKey = "propertyKey";
-        boolean propertyValue = true;
+        final boolean propertyValue = true;
         conf.put(propertyKey, propertyValue);
         assertEquals(propertyValue, ConfigFetcher.fetchBooleanProperty(conf, propertyKey, false));
     }
@@ -117,7 +117,7 @@ public class ConfigFetcherTest {
         Map<String, Object> conf = new HashMap<>(1);
         String propertyKey = "propertyKey",
                 anotherKey = "anotherKey";
-        boolean propertyValue = true,
+        final boolean propertyValue = true,
                 anotherValue = false;
         conf.put(propertyKey, propertyValue);
         assertEquals(anotherValue, ConfigFetcher.fetchBooleanProperty(conf, anotherKey, anotherValue));

@@ -17,13 +17,14 @@ package net.syberia.storm.rabbitmq;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Envelope;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.apache.storm.tuple.Fields;
 import org.junit.Test;
 import org.apache.storm.utils.Utils;
 import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertNotNull;
 import static junit.framework.Assert.assertNull;
 import org.apache.storm.task.TopologyContext;
 
@@ -46,7 +47,7 @@ public class SingleStreamRabbitMqMessageSchemeTest {
             
             @Override
             public List<Object> convertToTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception {
-                return Arrays.asList(stringValue);
+                return Collections.singletonList(stringValue);
             }
 
             @Override
@@ -61,6 +62,7 @@ public class SingleStreamRabbitMqMessageSchemeTest {
         };
 
         StreamedTuple streamedTuple = rabbitMqMessageScheme.convertToStreamedTuple(null, null, null);
+        assertNotNull("Streamed tuple is null", streamedTuple);
         assertEquals(streamId, streamedTuple.getStreamId());
         assertEquals(stringValue, (String) streamedTuple.getTuple().get(0));
 
@@ -78,7 +80,7 @@ public class SingleStreamRabbitMqMessageSchemeTest {
             
             @Override
             public List<Object> convertToTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception {
-                return Arrays.asList("stringValue");
+                return Collections.singletonList("stringValue");
             }
 
             @Override
@@ -93,6 +95,7 @@ public class SingleStreamRabbitMqMessageSchemeTest {
         };
 
         StreamedTuple streamedTuple = rabbitMqMessageScheme.convertToStreamedTuple(null, null, null);
+        assertNotNull("Streamed tuple is null", streamedTuple);
         assertEquals(Utils.DEFAULT_STREAM_ID, streamedTuple.getStreamId());
     }
 

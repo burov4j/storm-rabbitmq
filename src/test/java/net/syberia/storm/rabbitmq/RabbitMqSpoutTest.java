@@ -19,7 +19,6 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Envelope;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -100,7 +99,7 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
     @Test
     public void messageEmitted() throws Exception {
         String streamId = "testStream";
-        List<Object> tuple = Arrays.asList("testValue");
+        List<Object> tuple = Collections.singletonList("testValue");
         RabbitMqSpout rabbitMqSpout = new RabbitMqSpout(rabbitMqChannelProvider, new EmptyRabbitMqMessageScheme() {
             @Override
             public StreamedTuple convertToStreamedTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception {
@@ -172,9 +171,7 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
     @Test
     public void initializerUsage() throws IOException {
         RabbitMqSpout rabbitMqSpout = new RabbitMqSpout(rabbitMqChannelProvider, new EmptyRabbitMqMessageScheme());
-        rabbitMqSpout.setInitializer((Channel channel) -> {
-            channel.queueDeclare();
-        });
+        rabbitMqSpout.setInitializer(Channel::queueDeclare);
         rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
         verify(mockChannel, times(1)).queueDeclare();
     }

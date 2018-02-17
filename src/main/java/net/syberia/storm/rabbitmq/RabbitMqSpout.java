@@ -22,23 +22,22 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeoutException;
+
+import lombok.extern.slf4j.Slf4j;
 import org.apache.storm.spout.SpoutOutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.topology.base.BaseRichSpout;
 import org.apache.storm.tuple.Fields;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author Andrey Burov
  */
+@Slf4j
 public class RabbitMqSpout extends BaseRichSpout {
 
     private static final long serialVersionUID = 614091429512483100L;
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMqSpout.class);
 
     public static final String KEY_QUEUE_NAME = "rabbitmq.queue_name";
     public static final String KEY_PREFETCH_COUNT = "rabbitmq.prefetch_count";
@@ -51,7 +50,6 @@ public class RabbitMqSpout extends BaseRichSpout {
 
     private RabbitMqInitializer initializer;
 
-    private String queueName;
     private boolean requeueOnFail;
     private boolean autoAck;
     private SpoutOutputCollector collector;
@@ -77,7 +75,7 @@ public class RabbitMqSpout extends BaseRichSpout {
 
     @Override
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
-        this.queueName = ConfigFetcher.fetchStringProperty(conf, KEY_QUEUE_NAME);
+        String queueName = ConfigFetcher.fetchStringProperty(conf, KEY_QUEUE_NAME);
         this.requeueOnFail = ConfigFetcher.fetchBooleanProperty(conf, KEY_REQUEUE_ON_FAIL, false);
         this.autoAck = ConfigFetcher.fetchBooleanProperty(conf, KEY_AUTO_ACK, false);
         int prefetchCount = ConfigFetcher.fetchIntegerProperty(conf, KEY_PREFETCH_COUNT, 50);
@@ -137,12 +135,12 @@ public class RabbitMqSpout extends BaseRichSpout {
         try {
             rabbitMqMessage = queueingConsumer.nextMessage(1L);
         } catch (InterruptedException ex) {
-            LOGGER.info("The consumer interrupted");
+            log.info("The consumer interrupted");
             return;
         }
 
         if (rabbitMqMessage == null) {
-            LOGGER.trace("There are no messages in the queue");
+            // There are no messages in the queue
             return;
         }
 
@@ -164,7 +162,7 @@ public class RabbitMqSpout extends BaseRichSpout {
         }
 
         if (streamedTuple == null) {
-            LOGGER.trace("Filtered message with id: {}", messageId);
+            log.trace("Filtered message with id: {}", messageId);
             try {
                 channel.basicAck(messageId, false);
             } catch (IOException ackEx) {
@@ -177,16 +175,12 @@ public class RabbitMqSpout extends BaseRichSpout {
 
     @Override
     public void ack(Object msgId) {
-        processMessageId(msgId, (long deliveryTag) -> {
-            channel.basicAck(deliveryTag, false);
-        });
+        processMessageId(msgId, (long deliveryTag) -> channel.basicAck(deliveryTag, false));
     }
 
     @Override
     public void fail(Object msgId) {
-        processMessageId(msgId, (long deliveryTag) -> {
-            channel.basicReject(deliveryTag, requeueOnFail);
-        });
+        processMessageId(msgId, (long deliveryTag) -> channel.basicReject(deliveryTag, requeueOnFail));
     }
 
     private void processMessageId(Object msgId, ChannelAction channelAction) {
@@ -197,7 +191,7 @@ public class RabbitMqSpout extends BaseRichSpout {
         try {
             channelAction.execute(deliveryTag);
         } catch (AlreadyClosedException ex) {
-            LOGGER.debug("Unable to process message id: " + deliveryTag, ex);
+            log.debug("Unable to process message id: " + deliveryTag, ex);
         } catch (IOException ex) {
             collector.reportError(ex);
         }
@@ -231,9 +225,9 @@ public class RabbitMqSpout extends BaseRichSpout {
         try {
             this.rabbitMqChannelProvider.cleanup();
         } catch (AlreadyClosedException ex) {
-            LOGGER.info("Connection is already closed");
+            log.info("Connection is already closed");
         } catch (Exception ex) {
-            LOGGER.error("Unable to cleanup RabbitMQ provider", ex);
+            log.error("Unable to cleanup RabbitMQ provider", ex);
         }
         this.rabbitMqMessageScheme.cleanup();
     }
