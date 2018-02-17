@@ -38,9 +38,15 @@ public class RabbitMqBolt extends BaseRichBolt {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMqBolt.class);
 
+    public static final String KEY_MANDATORY = "rabbitmq.mandatory";
+    public static final String KEY_IMMEDIATE = "rabbitmq.immediate";
+
     private final TupleToRabbitMqMessageConverter tupleToRabbitMqMessageConverter;
     
     private RabbitMqChannelProvider rabbitMqChannelProvider;
+
+    private boolean mandatory;
+    private boolean immediate;
 
     private OutputCollector collector;
     
@@ -56,6 +62,9 @@ public class RabbitMqBolt extends BaseRichBolt {
 
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
+        this.mandatory = ConfigFetcher.fetchBooleanProperty(stormConf, KEY_MANDATORY, false);
+        this.immediate = ConfigFetcher.fetchBooleanProperty(stormConf, KEY_IMMEDIATE, false);
+
         this.collector = collector;
 
         this.tupleToRabbitMqMessageConverter.prepare(stormConf, context);
@@ -97,7 +106,7 @@ public class RabbitMqBolt extends BaseRichBolt {
         }
 
         try {
-            channel.basicPublish(exchange, routingKey, properties, messageBody);
+            channel.basicPublish(exchange, routingKey, mandatory, immediate, properties, messageBody);
         } catch (IOException ex) {
             collector.reportError(ex);
             collector.fail(input);

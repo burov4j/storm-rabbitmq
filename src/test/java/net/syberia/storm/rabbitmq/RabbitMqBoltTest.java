@@ -17,6 +17,9 @@ package net.syberia.storm.rabbitmq;
 
 import com.rabbitmq.client.AMQP;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import static junit.framework.Assert.fail;
 import org.apache.storm.task.OutputCollector;
@@ -24,6 +27,7 @@ import org.apache.storm.tuple.Tuple;
 import org.junit.Before;
 import org.junit.Test;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -70,11 +74,14 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
             }
         });
         rabbitMqBolt.declareOutputFields(null);
-        rabbitMqBolt.prepare(null, null, mockOutputCollector);
+        Map<String, Object> stormConf = new HashMap<>(2);
+        stormConf.put(RabbitMqBolt.KEY_MANDATORY, true);
+        stormConf.put(RabbitMqBolt.KEY_IMMEDIATE, true);
+        rabbitMqBolt.prepare(stormConf, null, mockOutputCollector);
         Tuple mockTuple = mock(Tuple.class);
         rabbitMqBolt.execute(mockTuple);
         rabbitMqBolt.cleanup();
-        verify(mockChannel, times(1)).basicPublish(exchange, routingKey, properties, messageBody);
+        verify(mockChannel, times(1)).basicPublish(exchange, routingKey, true, true, properties, messageBody);
         verify(mockOutputCollector, times(1)).ack(mockTuple);
         verify(rabbitMqChannelProvider, times(1)).returnChannel(mockChannel);
         verify(rabbitMqChannelProvider, times(1)).cleanup();
@@ -96,7 +103,7 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
     public void unableToGetChannel() throws Exception {
         doThrow(Exception.class).when(rabbitMqChannelProvider).getChannel();
         RabbitMqBolt rabbitMqBolt = new RabbitMqBolt(rabbitMqChannelProvider, new EmptyTupleToRabbitMqMessageConverter());
-        rabbitMqBolt.prepare(null, null, mockOutputCollector);
+        rabbitMqBolt.prepare(Collections.emptyMap(), null, mockOutputCollector);
         Tuple tuple = mock(Tuple.class);
         rabbitMqBolt.execute(tuple);
         verify(mockOutputCollector, times(1)).reportError(any(Exception.class));
@@ -105,9 +112,9 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
 
     @Test
     public void unableToPublish() throws Exception {
-        doThrow(IOException.class).when(mockChannel).basicPublish(any(), any(), any(), any());
+        doThrow(IOException.class).when(mockChannel).basicPublish(any(), any(), eq(false), eq(false), any(), any());
         RabbitMqBolt rabbitMqBolt = new RabbitMqBolt(rabbitMqChannelProvider, new EmptyTupleToRabbitMqMessageConverter());
-        rabbitMqBolt.prepare(null, null, mockOutputCollector);
+        rabbitMqBolt.prepare(Collections.emptyMap(), null, mockOutputCollector);
         Tuple tuple = mock(Tuple.class);
         rabbitMqBolt.execute(tuple);
         verify(mockOutputCollector, times(1)).reportError(any(IOException.class));
@@ -123,7 +130,7 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
                 throw new RuntimeException();
             }
         });
-        rabbitMqBolt.prepare(null, null, mockOutputCollector);
+        rabbitMqBolt.prepare(Collections.emptyMap(), null, mockOutputCollector);
         Tuple tuple = mock(Tuple.class);
         rabbitMqBolt.execute(tuple);
         verify(mockOutputCollector, times(1)).reportError(any(RuntimeException.class));
