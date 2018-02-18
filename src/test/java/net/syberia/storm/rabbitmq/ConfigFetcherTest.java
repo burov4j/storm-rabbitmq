@@ -123,4 +123,13 @@ public class ConfigFetcherTest {
         assertEquals(anotherValue, ConfigFetcher.fetchBooleanProperty(conf, anotherKey, anotherValue));
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void illegalArgumentException() {
+        Map<String, Object> conf = new HashMap<>(1);
+        String propertyKey = "propertyKey";
+        int illegalArgument = 0;
+        conf.put(propertyKey, illegalArgument);
+        ConfigFetcher.fetchStringProperty(conf, propertyKey);
+    }
+
 }

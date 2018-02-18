@@ -32,7 +32,7 @@ class ConfigFetcher {
     }
 
     public static String fetchStringProperty(Map config, String key, String defaultValue) {
-        return fetchProperty(config, key, defaultValue);
+        return fetchProperty(config, key, String.class, defaultValue);
     }
 
     public static int fetchIntegerProperty(Map config, String key, int defaultValue) {
@@ -44,14 +44,14 @@ class ConfigFetcher {
     }
     
     private static Number fetchNumberProperty(Map config, String key, Number defaultValue) {
-        return fetchProperty(config, key, defaultValue);
+        return fetchProperty(config, key, Number.class, defaultValue);
     }
 
     public static boolean fetchBooleanProperty(Map config, String key, boolean defaultValue) {
-        return fetchProperty(config, key, defaultValue);
+        return fetchProperty(config, key, Boolean.class, defaultValue);
     }
 
-    private static <T> T fetchProperty(Map config, String key, T defaultValue) {
+    private static <T> T fetchProperty(Map config, String key, Class<T> valueClass, T defaultValue) {
         Object value = config.get(key);
         if (value == null) {
             if (defaultValue == null) {
@@ -60,8 +60,11 @@ class ConfigFetcher {
                 return defaultValue;
             }
         } else {
-            //noinspection unchecked
-            return (T) value;
+            try {
+                return valueClass.cast(value);
+            } catch (ClassCastException ex) {
+                throw new IllegalArgumentException("Unable to fetch property: " + key, ex);
+            }
         }
     }
 
