@@ -20,7 +20,6 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.ShutdownSignalException;
-import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -50,8 +49,9 @@ class AutorecoverableQueueingConsumer extends DefaultConsumer {
     }
 
     @Override
-    public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-        queue.add(new RabbitMqMessage(envelope, properties, body));
+    public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
+        RabbitMqMessage rabbitMqMessage = new RabbitMqMessage(envelope, properties, body);
+        queue.add(rabbitMqMessage);
     }
     
     public RabbitMqMessage nextMessage(long timeout) throws InterruptedException {
