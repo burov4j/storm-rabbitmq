@@ -1,6 +1,5 @@
 language: java
-install: cp .travis.settings.xml $HOME/.m2/settings.xml
-script: mvn package
+before_deploy: cp .travis.settings.xml $HOME/.m2/settings.xml
 deploy:
   provider: script
   script: mvn deploy
