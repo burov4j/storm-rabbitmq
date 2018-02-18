@@ -1,5 +1,11 @@
 language: java
-script: cp .travis.settings.xml $HOME/.m2/settings.xml && mvn clean deploy
+install: cp .travis.settings.xml $HOME/.m2/settings.xml
+script: mvn package
+deploy:
+  provider: script
+  script: mvn deploy
+  on:
+    tags: true
 after_success:
   - bash <(curl -s https://codecov.io/bash)
 notifications:
