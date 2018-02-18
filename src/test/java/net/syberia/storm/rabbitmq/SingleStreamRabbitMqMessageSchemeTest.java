@@ -23,9 +23,9 @@ import java.util.Map;
 import org.apache.storm.tuple.Fields;
 import org.junit.Test;
 import org.apache.storm.utils.Utils;
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
-import static junit.framework.Assert.assertNull;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import org.apache.storm.task.TopologyContext;
 
 /**

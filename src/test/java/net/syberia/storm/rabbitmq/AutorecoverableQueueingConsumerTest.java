@@ -18,7 +18,7 @@ package net.syberia.storm.rabbitmq;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Envelope;
 import java.io.IOException;
-import static junit.framework.Assert.assertNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
