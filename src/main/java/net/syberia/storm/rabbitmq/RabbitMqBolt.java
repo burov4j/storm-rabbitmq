@@ -40,41 +40,39 @@ public class RabbitMqBolt extends BaseRichBolt {
     public static final String KEY_MANDATORY = "rabbitmq.mandatory";
     public static final String KEY_IMMEDIATE = "rabbitmq.immediate";
 
+    private final RabbitMqConfig rabbitMqConfig;
     private final TupleToRabbitMqMessageConverter tupleToRabbitMqMessageConverter;
-    
-    private RabbitMqChannelProvider rabbitMqChannelProvider;
-    private Channel channel;
+
+    private OutputCollector collector;
 
     private boolean mandatory;
     private boolean immediate;
 
-    private OutputCollector collector;
+    private RabbitMqChannelProvider rabbitMqChannelProvider;
+    private Channel channel;
     
     public RabbitMqBolt(TupleToRabbitMqMessageConverter tupleToRabbitMqMessageConverter) {
         this(null, tupleToRabbitMqMessageConverter);
     }
 
-    public RabbitMqBolt(RabbitMqChannelProvider rabbitMqChannelProvider,
-            TupleToRabbitMqMessageConverter tupleToRabbitMqMessageConverter) {
-        this.rabbitMqChannelProvider = rabbitMqChannelProvider;
+    public RabbitMqBolt(RabbitMqConfig rabbitMqConfig, TupleToRabbitMqMessageConverter tupleToRabbitMqMessageConverter) {
+        this.rabbitMqConfig = rabbitMqConfig;
         this.tupleToRabbitMqMessageConverter = tupleToRabbitMqMessageConverter;
     }
 
     @Override
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
-        this.mandatory = ConfigFetcher.fetchBooleanProperty(stormConf, KEY_MANDATORY, false);
-        this.immediate = ConfigFetcher.fetchBooleanProperty(stormConf, KEY_IMMEDIATE, false);
-
         this.collector = collector;
 
-        this.tupleToRabbitMqMessageConverter.prepare(stormConf, context);
+        mandatory = ConfigFetcher.fetchBooleanProperty(stormConf, KEY_MANDATORY, false);
+        immediate = ConfigFetcher.fetchBooleanProperty(stormConf, KEY_IMMEDIATE, false);
+
+        tupleToRabbitMqMessageConverter.prepare(stormConf, context);
         
-        if (this.rabbitMqChannelProvider == null) {
-            this.rabbitMqChannelProvider = RabbitMqChannelProvider.withStormConfig(stormConf);
-        }
+        rabbitMqChannelProvider = createRabbitMqChannelProvider(stormConf);
         
         try {
-            this.rabbitMqChannelProvider.prepare();
+            rabbitMqChannelProvider.prepare();
         } catch (IOException | TimeoutException ex) {
             throw new RuntimeException("Unable to prepare RabbitMQ channel provider", ex);
         }
@@ -83,6 +81,14 @@ public class RabbitMqBolt extends BaseRichBolt {
             channel = rabbitMqChannelProvider.getChannel();
         } catch (Exception ex) {
             throw new RuntimeException("Unable to get RabbitMQ channel from the provider", ex);
+        }
+    }
+
+    RabbitMqChannelProvider createRabbitMqChannelProvider(Map stormConf) { // package-private for testing
+        if (rabbitMqConfig == null) {
+            return RabbitMqChannelProvider.withStormConfig(stormConf);
+        } else {
+            return RabbitMqChannelProvider.withRabbitMqConfig(rabbitMqConfig);
         }
     }
 
@@ -121,11 +127,11 @@ public class RabbitMqBolt extends BaseRichBolt {
     @Override
     public void cleanup() {
         try {
-            this.rabbitMqChannelProvider.cleanup();
+            rabbitMqChannelProvider.cleanup();
         } catch (Exception ex) {
             log.error("Unable to cleanup RabbitMQ provider", ex);
         }
-        this.tupleToRabbitMqMessageConverter.cleanup();
+        tupleToRabbitMqMessageConverter.cleanup();
     }
 
 }

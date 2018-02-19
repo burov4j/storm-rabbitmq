@@ -51,13 +51,13 @@ public class RabbitMqConfig implements Serializable {
     }
 
     public RabbitMqConfig(Map rabbitMqConfig) {
-        this.host = ConfigFetcher.fetchStringProperty(rabbitMqConfig, KEY_HOST, this.host);
-        this.port = ConfigFetcher.fetchIntegerProperty(rabbitMqConfig, KEY_PORT, this.port);
-        this.addresses = ConfigFetcher.fetchStringProperty(rabbitMqConfig, KEY_ADDRESSES, this.addresses);
-        this.username = ConfigFetcher.fetchStringProperty(rabbitMqConfig, KEY_USERNAME, this.username);
-        this.password = ConfigFetcher.fetchStringProperty(rabbitMqConfig, KEY_PASSWORD, this.password);
-        this.virtualHost = ConfigFetcher.fetchStringProperty(rabbitMqConfig, KEY_VIRTUAL_HOST, this.virtualHost);
-        this.requestedHeartbeat = ConfigFetcher.fetchIntegerProperty(rabbitMqConfig, KEY_REQUESTED_HEARTBEAT, this.requestedHeartbeat);
+        host = ConfigFetcher.fetchStringProperty(rabbitMqConfig, KEY_HOST, this.host);
+        port = ConfigFetcher.fetchIntegerProperty(rabbitMqConfig, KEY_PORT, this.port);
+        addresses = ConfigFetcher.fetchStringProperty(rabbitMqConfig, KEY_ADDRESSES, this.addresses);
+        username = ConfigFetcher.fetchStringProperty(rabbitMqConfig, KEY_USERNAME, this.username);
+        password = ConfigFetcher.fetchStringProperty(rabbitMqConfig, KEY_PASSWORD, this.password);
+        virtualHost = ConfigFetcher.fetchStringProperty(rabbitMqConfig, KEY_VIRTUAL_HOST, this.virtualHost);
+        requestedHeartbeat = ConfigFetcher.fetchIntegerProperty(rabbitMqConfig, KEY_REQUESTED_HEARTBEAT, this.requestedHeartbeat);
     }
 
     public String getHost() {

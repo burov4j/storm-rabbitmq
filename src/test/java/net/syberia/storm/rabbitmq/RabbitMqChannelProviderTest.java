@@ -139,38 +139,4 @@ public class RabbitMqChannelProviderTest extends RabbitMqTest {
         assertTrue(provider1 == provider2);
     }
 
-    @Test
-    public void serialization() throws IOException, ClassNotFoundException {
-        RabbitMqConfig rabbitMqConfig = new RabbitMqConfigBuilder()
-                .setUsername("serialization test user")
-                .build();
-        
-        RabbitMqChannelProvider provider1 = new RabbitMqChannelProvider(rabbitMqConfig);
-        byte[] providerBytes;
-        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
-            try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream)) {
-                objectOutputStream.writeObject(provider1);
-            }
-            providerBytes = byteArrayOutputStream.toByteArray();
-        }
-        
-        RabbitMqChannelProvider provider2;
-        try (InputStream inputStream = new ByteArrayInputStream(providerBytes)) {
-            try (ObjectInputStream objectInputStream = new ObjectInputStream(inputStream)) {
-                provider2 = (RabbitMqChannelProvider) objectInputStream.readObject();
-            }
-        }
-        
-        RabbitMqChannelProvider provider3;
-        try (InputStream inputStream = new ByteArrayInputStream(providerBytes)) {
-            try (ObjectInputStream objectInputStream = new ObjectInputStream(inputStream)) {
-                provider3 = (RabbitMqChannelProvider) objectInputStream.readObject();
-            }
-        }
-        
-        assertFalse(provider1 == provider2);
-        assertTrue(provider1.equals(provider2));
-        assertTrue(provider2 == provider3);
-    }
-
 }

@@ -19,8 +19,6 @@ import com.rabbitmq.client.Address;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ConnectionFactory;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -34,15 +32,13 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @EqualsAndHashCode(of = "rabbitMqConfig")
-public class RabbitMqChannelProvider implements Serializable {
-
-    private static final long serialVersionUID = 8824907115492553548L;
+class RabbitMqChannelProvider {
 
     private static final Set<RabbitMqChannelProvider> KNOWN_PROVIDERS = new HashSet<>();
 
     private final RabbitMqConfig rabbitMqConfig;
 
-    private transient RabbitMqChannelFactory rabbitMqChannelFactory;
+    private RabbitMqChannelFactory rabbitMqChannelFactory;
 
     RabbitMqChannelProvider() { // for testing
         this(new RabbitMqConfig());
@@ -50,10 +46,6 @@ public class RabbitMqChannelProvider implements Serializable {
 
     static RabbitMqChannelProvider withStormConfig(Map stormConf) {
         RabbitMqConfig rabbitMqConfig = new RabbitMqConfig(stormConf);
-        return withRabbitMqConfig(rabbitMqConfig);
-    }
-
-    private Object readResolve() {
         return withRabbitMqConfig(rabbitMqConfig);
     }
 
@@ -79,9 +71,9 @@ public class RabbitMqChannelProvider implements Serializable {
             ConnectionFactory rabbitMqConnectionFactory = createConnectionFactory();
             if (rabbitMqConfig.hasAddresses()) {
                 Address[] addresses = Address.parseAddresses(rabbitMqConfig.getAddresses());
-                this.rabbitMqChannelFactory = new RabbitMqChannelFactory(rabbitMqConnectionFactory, addresses);
+                rabbitMqChannelFactory = new RabbitMqChannelFactory(rabbitMqConnectionFactory, addresses);
             } else {
-                this.rabbitMqChannelFactory = new RabbitMqChannelFactory(rabbitMqConnectionFactory);
+                rabbitMqChannelFactory = new RabbitMqChannelFactory(rabbitMqConnectionFactory);
             }
             log.info("RabbitMQ channel factory was created");
         }
@@ -106,10 +98,6 @@ public class RabbitMqChannelProvider implements Serializable {
         if (rabbitMqChannelFactory != null) {
             rabbitMqChannelFactory.close();
         }
-    }
-
-    private void readObject(ObjectInputStream objectInputStream) throws IOException, ClassNotFoundException {
-        objectInputStream.defaultReadObject();
     }
 
 }

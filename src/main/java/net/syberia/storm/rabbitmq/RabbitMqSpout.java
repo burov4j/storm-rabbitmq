@@ -44,17 +44,19 @@ public class RabbitMqSpout extends BaseRichSpout {
     public static final String KEY_REQUEUE_ON_FAIL = "rabbitmq.requeue_on_fail";
     public static final String KEY_AUTO_ACK = "rabbitmq.auto_ack";
 
+    private final RabbitMqConfig rabbitMqConfig;
     private final RabbitMqMessageScheme rabbitMqMessageScheme;
 
-    private RabbitMqChannelProvider rabbitMqChannelProvider;
-
-    private RabbitMqInitializer initializer;
+    private SpoutOutputCollector collector;
 
     private boolean requeueOnFail;
     private boolean autoAck;
-    private SpoutOutputCollector collector;
 
+    private RabbitMqChannelProvider rabbitMqChannelProvider;
     private Channel channel;
+
+    private RabbitMqInitializer initializer;
+
     AutorecoverableQueueingConsumer queueingConsumer; // package-private for testing
 
     private boolean active;
@@ -63,9 +65,8 @@ public class RabbitMqSpout extends BaseRichSpout {
         this(null, rabbitMqMessageScheme);
     }
 
-    public RabbitMqSpout(RabbitMqChannelProvider rabbitMqChannelProvider,
-            RabbitMqMessageScheme rabbitMqMessageScheme) {
-        this.rabbitMqChannelProvider = rabbitMqChannelProvider;
+    public RabbitMqSpout(RabbitMqConfig rabbitMqConfig, RabbitMqMessageScheme rabbitMqMessageScheme) {
+        this.rabbitMqConfig = rabbitMqConfig;
         this.rabbitMqMessageScheme = rabbitMqMessageScheme;
     }
 
@@ -75,23 +76,23 @@ public class RabbitMqSpout extends BaseRichSpout {
 
     @Override
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
+        this.collector = collector;
+
         String queueName = ConfigFetcher.fetchStringProperty(conf, KEY_QUEUE_NAME);
-        this.requeueOnFail = ConfigFetcher.fetchBooleanProperty(conf, KEY_REQUEUE_ON_FAIL, false);
-        this.autoAck = ConfigFetcher.fetchBooleanProperty(conf, KEY_AUTO_ACK, false);
-        int prefetchCount = ConfigFetcher.fetchIntegerProperty(conf, KEY_PREFETCH_COUNT, 50);
+        requeueOnFail = ConfigFetcher.fetchBooleanProperty(conf, KEY_REQUEUE_ON_FAIL, false);
+        autoAck = ConfigFetcher.fetchBooleanProperty(conf, KEY_AUTO_ACK, false);
+        int prefetchCount = ConfigFetcher.fetchIntegerProperty(conf, KEY_PREFETCH_COUNT, 64);
+
         if (prefetchCount < 1) {
             throw new IllegalArgumentException("Invalid prefetch count: " + prefetchCount);
         }
-        this.collector = collector;
 
-        this.rabbitMqMessageScheme.prepare(conf, context);
+        rabbitMqMessageScheme.prepare(conf, context);
 
-        if (this.rabbitMqChannelProvider == null) {
-            this.rabbitMqChannelProvider = RabbitMqChannelProvider.withStormConfig(conf);
-        }
+        rabbitMqChannelProvider = createRabbitMqChannelProvider(conf);
 
         try {
-            this.rabbitMqChannelProvider.prepare();
+            rabbitMqChannelProvider.prepare();
         } catch (IOException | TimeoutException ex) {
             throw new RuntimeException("Unable to prepare RabbitMQ channel provider", ex);
         }
@@ -122,6 +123,14 @@ public class RabbitMqSpout extends BaseRichSpout {
             channel.basicConsume(queueName, autoAck, context.getThisComponentId(), queueingConsumer);
         } catch (IOException ex) {
             throw new RuntimeException("Unable to start consuming the queue", ex);
+        }
+    }
+
+    RabbitMqChannelProvider createRabbitMqChannelProvider(Map conf) { // package-private for testing
+        if (rabbitMqConfig == null) {
+            return RabbitMqChannelProvider.withStormConfig(conf);
+        } else {
+            return RabbitMqChannelProvider.withRabbitMqConfig(rabbitMqConfig);
         }
     }
 
@@ -223,13 +232,13 @@ public class RabbitMqSpout extends BaseRichSpout {
     @Override
     public void close() {
         try {
-            this.rabbitMqChannelProvider.cleanup();
+            rabbitMqChannelProvider.cleanup();
         } catch (AlreadyClosedException ex) {
             log.info("Connection is already closed");
         } catch (Exception ex) {
             log.error("Unable to cleanup RabbitMQ provider", ex);
         }
-        this.rabbitMqMessageScheme.cleanup();
+        rabbitMqMessageScheme.cleanup();
     }
 
 }

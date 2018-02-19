@@ -28,10 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 /**
  *
@@ -52,7 +49,7 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
                 routingKey = "testRoutingKey";
         byte[] messageBody = "testMessageBody".getBytes("UTF8");
         AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder().build();
-        RabbitMqBolt rabbitMqBolt = new RabbitMqBolt(rabbitMqChannelProvider, new EmptyTupleToRabbitMqMessageConverter() {
+        RabbitMqBolt rabbitMqBolt = spy(new RabbitMqBolt(new EmptyTupleToRabbitMqMessageConverter() {
             @Override
             public String getExchange(Tuple tuple) {
                 return exchange;
@@ -72,11 +69,12 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
             public byte[] getMessageBody(Tuple tuple) {
                 return messageBody;
             }
-        });
+        }));
         rabbitMqBolt.declareOutputFields(null);
         Map<String, Object> stormConf = new HashMap<>(2);
         stormConf.put(RabbitMqBolt.KEY_MANDATORY, true);
         stormConf.put(RabbitMqBolt.KEY_IMMEDIATE, true);
+        doReturn(rabbitMqChannelProvider).when(rabbitMqBolt).createRabbitMqChannelProvider(any());
         rabbitMqBolt.prepare(stormConf, null, mockOutputCollector);
         Tuple mockTuple = mock(Tuple.class);
         rabbitMqBolt.execute(mockTuple);
@@ -89,7 +87,7 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
     @Test
     public void unableToPrepare() throws IOException, TimeoutException {
         doThrow(IOException.class).when(rabbitMqChannelProvider).prepare();
-        RabbitMqBolt rabbitMqBolt = new RabbitMqBolt(rabbitMqChannelProvider, new EmptyTupleToRabbitMqMessageConverter());
+        RabbitMqBolt rabbitMqBolt = new RabbitMqBolt(new EmptyTupleToRabbitMqMessageConverter());
         try {
             rabbitMqBolt.prepare(null, null, null);
             fail("RuntimeException expected");
@@ -101,14 +99,15 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
     @Test(expected = Exception.class)
     public void unableToGetChannel() throws Exception {
         doThrow(Exception.class).when(rabbitMqChannelProvider).getChannel();
-        RabbitMqBolt rabbitMqBolt = new RabbitMqBolt(rabbitMqChannelProvider, new EmptyTupleToRabbitMqMessageConverter());
+        RabbitMqBolt rabbitMqBolt = new RabbitMqBolt(new EmptyTupleToRabbitMqMessageConverter());
         rabbitMqBolt.prepare(Collections.emptyMap(), null, mockOutputCollector);
     }
 
     @Test
     public void unableToPublish() throws Exception {
         doThrow(IOException.class).when(mockChannel).basicPublish(any(), any(), eq(false), eq(false), any(), any());
-        RabbitMqBolt rabbitMqBolt = new RabbitMqBolt(rabbitMqChannelProvider, new EmptyTupleToRabbitMqMessageConverter());
+        RabbitMqBolt rabbitMqBolt = spy(new RabbitMqBolt(new EmptyTupleToRabbitMqMessageConverter()));
+        doReturn(rabbitMqChannelProvider).when(rabbitMqBolt).createRabbitMqChannelProvider(any());
         rabbitMqBolt.prepare(Collections.emptyMap(), null, mockOutputCollector);
         Tuple tuple = mock(Tuple.class);
         rabbitMqBolt.execute(tuple);
@@ -118,12 +117,13 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
 
     @Test
     public void unableToGetMessageBody() throws Exception {
-        RabbitMqBolt rabbitMqBolt = new RabbitMqBolt(rabbitMqChannelProvider, new EmptyTupleToRabbitMqMessageConverter() {
+        RabbitMqBolt rabbitMqBolt = spy(new RabbitMqBolt(new EmptyTupleToRabbitMqMessageConverter() {
             @Override
             public byte[] getMessageBody(Tuple tuple) {
                 throw new RuntimeException();
             }
-        });
+        }));
+        doReturn(rabbitMqChannelProvider).when(rabbitMqBolt).createRabbitMqChannelProvider(any());
         rabbitMqBolt.prepare(Collections.emptyMap(), null, mockOutputCollector);
         Tuple tuple = mock(Tuple.class);
         rabbitMqBolt.execute(tuple);
@@ -134,7 +134,7 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
     @Test
     public void unableToCleanup() throws Exception {
         doThrow(Exception.class).when(rabbitMqChannelProvider).cleanup();
-        RabbitMqBolt rabbitMqBolt = new RabbitMqBolt(rabbitMqChannelProvider, new EmptyTupleToRabbitMqMessageConverter());
+        RabbitMqBolt rabbitMqBolt = new RabbitMqBolt(new EmptyTupleToRabbitMqMessageConverter());
         rabbitMqBolt.cleanup();
     }
 

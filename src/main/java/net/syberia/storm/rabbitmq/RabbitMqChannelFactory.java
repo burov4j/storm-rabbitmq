@@ -31,24 +31,24 @@ class RabbitMqChannelFactory implements AutoCloseable {
     private final Connection rabbitMqConnection;
 
     public RabbitMqChannelFactory(ConnectionFactory rabbitMqConnectionFactory) throws IOException, TimeoutException {
-        this.rabbitMqConnection = rabbitMqConnectionFactory.newConnection();
+        rabbitMqConnection = rabbitMqConnectionFactory.newConnection();
     }
     
     public RabbitMqChannelFactory(ConnectionFactory rabbitMqConnectionFactory, Address[] addresses) throws IOException, TimeoutException {
-        this.rabbitMqConnection = rabbitMqConnectionFactory.newConnection(addresses);
+        rabbitMqConnection = rabbitMqConnectionFactory.newConnection(addresses);
     }
 
     public Channel createChannel() throws Exception {
-        return this.rabbitMqConnection.createChannel();
+        return rabbitMqConnection.createChannel();
     }
 
     public boolean isOpen() {
-        return this.rabbitMqConnection.isOpen();
+        return rabbitMqConnection.isOpen();
     }
 
     @Override
     public void close() throws Exception {
-        this.rabbitMqConnection.close();
+        rabbitMqConnection.close();
     }
 
 }
