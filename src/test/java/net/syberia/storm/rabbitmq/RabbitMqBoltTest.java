@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
-import static org.junit.Assert.fail;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.tuple.Tuple;
 import org.junit.Before;
@@ -84,16 +83,11 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
         verify(rabbitMqChannelProvider, times(1)).cleanup();
     }
 
-    @Test
+    @Test(expected = RuntimeException.class)
     public void unableToPrepare() throws IOException, TimeoutException {
         doThrow(IOException.class).when(rabbitMqChannelProvider).prepare();
         RabbitMqBolt rabbitMqBolt = new RabbitMqBolt(new EmptyTupleToRabbitMqMessageConverter());
-        try {
-            rabbitMqBolt.prepare(null, null, null);
-            fail("RuntimeException expected");
-        } catch (RuntimeException ex) {
-            // the test passed
-        }
+        rabbitMqBolt.prepare(null, null, null);
     }
 
     @Test(expected = Exception.class)
@@ -134,7 +128,9 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
     @Test
     public void unableToCleanup() throws Exception {
         doThrow(Exception.class).when(rabbitMqChannelProvider).cleanup();
-        RabbitMqBolt rabbitMqBolt = new RabbitMqBolt(new EmptyTupleToRabbitMqMessageConverter());
+        RabbitMqBolt rabbitMqBolt = spy(new RabbitMqBolt(new EmptyTupleToRabbitMqMessageConverter()));
+        doReturn(rabbitMqChannelProvider).when(rabbitMqBolt).createRabbitMqChannelProvider(any());
+        rabbitMqBolt.prepare(Collections.emptyMap(), null, mockOutputCollector);
         rabbitMqBolt.cleanup();
     }
 

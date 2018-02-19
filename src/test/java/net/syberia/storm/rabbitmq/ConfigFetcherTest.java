@@ -18,7 +18,6 @@ package net.syberia.storm.rabbitmq;
 import java.util.HashMap;
 import java.util.Map;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import org.junit.Test;
 
 /**
@@ -37,7 +36,7 @@ public class ConfigFetcherTest {
         assertEquals(propertyValue, ConfigFetcher.fetchStringProperty(conf, propertyKey, "defaultValue"));
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void fetchStringPropertyNotExists() {
         Map<String, Object> conf = new HashMap<>(1);
         String propertyKey = "propertyKey",
@@ -46,12 +45,7 @@ public class ConfigFetcherTest {
                 anotherValue = "anotherValue";
         conf.put(propertyKey, propertyValue);
         assertEquals(anotherValue, ConfigFetcher.fetchStringProperty(conf, anotherKey, anotherValue));
-        try {
-            ConfigFetcher.fetchStringProperty(conf, anotherKey);
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException ex) {
-            // the test passed
-        }
+        ConfigFetcher.fetchStringProperty(conf, anotherKey);
     }
 
     @Test

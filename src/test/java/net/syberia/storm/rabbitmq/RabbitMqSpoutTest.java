@@ -63,15 +63,10 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
         doReturn("my-test-spout").when(mockTopologyContext).getThisComponentId();
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void queueNotSpecified() {
         RabbitMqSpout rabbitMqSpout = new RabbitMqSpout(new EmptyRabbitMqMessageScheme());
-        try {
-            rabbitMqSpout.open(Collections.EMPTY_MAP, mockTopologyContext, mockSpoutOutputCollector);
-            fail("IllegalArgumentException expected");
-        } catch (IllegalArgumentException ex) {
-            // the test passed
-        }
+        rabbitMqSpout.open(Collections.EMPTY_MAP, mockTopologyContext, mockSpoutOutputCollector);
     }
 
     @Test
@@ -178,30 +173,20 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
         verify(mockChannel, times(1)).queueDeclare();
     }
 
-    @Test
+    @Test(expected = RuntimeException.class)
     public void initializerException() {
         RabbitMqSpout rabbitMqSpout = new RabbitMqSpout(new EmptyRabbitMqMessageScheme());
         rabbitMqSpout.setInitializer((Channel channel) -> {
             throw new IOException();
         });
-        try {
-            rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
-            fail("RuntimeException expected");
-        } catch (RuntimeException ex) {
-            // success
-        }
+        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
     }
 
-    @Test
+    @Test(expected = RuntimeException.class)
     public void unableToOpen() throws IOException, TimeoutException {
         doThrow(IOException.class).when(rabbitMqChannelProvider).prepare();
         RabbitMqSpout rabbitMqSpout = new RabbitMqSpout(new EmptyRabbitMqMessageScheme());
-        try {
-            rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
-            fail("RuntimeException expected");
-        } catch (RuntimeException ex) {
-            // the test passed
-        }
+        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
     }
 
     @Test
@@ -228,7 +213,9 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
     @Test
     public void unableToClose() throws Exception {
         doThrow(Exception.class).when(rabbitMqChannelProvider).cleanup();
-        RabbitMqSpout rabbitMqSpout = new RabbitMqSpout(new EmptyRabbitMqMessageScheme());
+        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
+        doReturn(rabbitMqChannelProvider).when(rabbitMqSpout).createRabbitMqChannelProvider(any());
+        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
         rabbitMqSpout.close();
     }
 
