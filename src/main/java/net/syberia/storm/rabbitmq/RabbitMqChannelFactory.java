@@ -91,11 +91,11 @@ class RabbitMqChannelFactory {
         return rabbitMqConnectionFactory;
     }
 
-    public Channel createChannel() throws Exception {
+    public Channel createChannel() throws IOException {
         return rabbitMqConnection.createChannel();
     }
 
-    public void cleanup() throws Exception {
+    public void cleanup() throws IOException {
         if (rabbitMqConnection != null) {
             rabbitMqConnection.close();
         }
