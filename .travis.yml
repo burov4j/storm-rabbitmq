@@ -1,6 +1,6 @@
 language: java
 install: echo 'No installation required'
-script: if [ -z "$TRAVIS_TAG" ]; then mvn test; fi;
+script: if [ -z "$TRAVIS_TAG" ]; then mvn package; fi;
 after_success:
   - if [ -z "$TRAVIS_TAG" ]; then bash <(curl -s https://codecov.io/bash); fi;
 before_deploy: cp .travis.settings.xml $HOME/.m2/settings.xml
