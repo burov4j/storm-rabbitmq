@@ -20,35 +20,85 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeoutException;
+import lombok.EqualsAndHashCode;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  * @author Andrey Burov
  */
-class RabbitMqChannelFactory implements AutoCloseable {
+@Slf4j
+@EqualsAndHashCode(of = "rabbitMqConfig")
+class RabbitMqChannelFactory {
 
-    private final Connection rabbitMqConnection;
+    private static final Set<RabbitMqChannelFactory> KNOWN_FACTORIES = new HashSet<>();
 
-    public RabbitMqChannelFactory(ConnectionFactory rabbitMqConnectionFactory) throws IOException, TimeoutException {
-        rabbitMqConnection = rabbitMqConnectionFactory.newConnection();
+    private final RabbitMqConfig rabbitMqConfig;
+
+    private Connection rabbitMqConnection;
+
+    RabbitMqChannelFactory() { // for testing
+        this(new RabbitMqConfig());
     }
-    
-    public RabbitMqChannelFactory(ConnectionFactory rabbitMqConnectionFactory, Address[] addresses) throws IOException, TimeoutException {
-        rabbitMqConnection = rabbitMqConnectionFactory.newConnection(addresses);
+
+    static RabbitMqChannelFactory withStormConfig(Map stormConf) {
+        RabbitMqConfig rabbitMqConfig = new RabbitMqConfig(stormConf);
+        return withRabbitMqConfig(rabbitMqConfig);
+    }
+
+    public static synchronized RabbitMqChannelFactory withRabbitMqConfig(RabbitMqConfig rabbitMqConfig) {
+        RabbitMqChannelFactory factoryWithConfig = KNOWN_FACTORIES.stream()
+                .filter(factory -> factory.rabbitMqConfig.equals(rabbitMqConfig))
+                .findFirst()
+                .orElse(null);
+        if (factoryWithConfig == null) {
+            factoryWithConfig = new RabbitMqChannelFactory(rabbitMqConfig);
+            KNOWN_FACTORIES.add(factoryWithConfig);
+        }
+        return factoryWithConfig;
+    }
+
+    RabbitMqChannelFactory(RabbitMqConfig rabbitMqConfig) { // package-private for testing
+        this.rabbitMqConfig = rabbitMqConfig;
+    }
+
+    public synchronized void prepare() throws IOException, TimeoutException {
+        if (rabbitMqConnection == null || !rabbitMqConnection.isOpen()) {
+            log.info("Creating RabbitMQ connection...");
+            ConnectionFactory rabbitMqConnectionFactory = createConnectionFactory();
+            if (rabbitMqConfig.hasAddresses()) {
+                Address[] addresses = Address.parseAddresses(rabbitMqConfig.getAddresses());
+                rabbitMqConnection = rabbitMqConnectionFactory.newConnection(addresses);
+            } else {
+                rabbitMqConnection = rabbitMqConnectionFactory.newConnection();
+            }
+            log.info("RabbitMQ connection was created");
+        }
+    }
+
+    ConnectionFactory createConnectionFactory() { // package-private for testing
+        ConnectionFactory rabbitMqConnectionFactory = new ConnectionFactory();
+        rabbitMqConnectionFactory.setHost(rabbitMqConfig.getHost());
+        rabbitMqConnectionFactory.setPort(rabbitMqConfig.getPort());
+        rabbitMqConnectionFactory.setUsername(rabbitMqConfig.getUsername());
+        rabbitMqConnectionFactory.setPassword(rabbitMqConfig.getPassword());
+        rabbitMqConnectionFactory.setVirtualHost(rabbitMqConfig.getVirtualHost());
+        rabbitMqConnectionFactory.setRequestedHeartbeat(rabbitMqConfig.getRequestedHeartbeat());
+        return rabbitMqConnectionFactory;
     }
 
     public Channel createChannel() throws Exception {
         return rabbitMqConnection.createChannel();
     }
 
-    public boolean isOpen() {
-        return rabbitMqConnection.isOpen();
-    }
-
-    @Override
-    public void close() throws Exception {
-        rabbitMqConnection.close();
+    public void cleanup() throws Exception {
+        if (rabbitMqConnection != null) {
+            rabbitMqConnection.close();
+        }
     }
 
 }

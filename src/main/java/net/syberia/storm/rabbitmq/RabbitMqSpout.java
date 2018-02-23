@@ -52,7 +52,7 @@ public class RabbitMqSpout extends BaseRichSpout {
     private boolean requeueOnFail;
     private boolean autoAck;
 
-    private RabbitMqChannelProvider rabbitMqChannelProvider;
+    private RabbitMqChannelFactory rabbitMqChannelFactory;
     private Channel channel;
 
     private RabbitMqInitializer initializer;
@@ -89,18 +89,18 @@ public class RabbitMqSpout extends BaseRichSpout {
 
         rabbitMqMessageScheme.prepare(conf, context);
 
-        rabbitMqChannelProvider = createRabbitMqChannelProvider(conf);
+        rabbitMqChannelFactory = createRabbitMqChannelFactory(conf);
 
         try {
-            rabbitMqChannelProvider.prepare();
+            rabbitMqChannelFactory.prepare();
         } catch (IOException | TimeoutException ex) {
-            throw new RuntimeException("Unable to prepare RabbitMQ channel provider", ex);
+            throw new RuntimeException("Unable to prepare RabbitMQ channel factory", ex);
         }
 
         try {
-            channel = rabbitMqChannelProvider.getChannel();
+            channel = rabbitMqChannelFactory.createChannel();
         } catch (Exception ex) {
-            throw new RuntimeException("Unable to get RabbitMQ channel from the provider", ex);
+            throw new RuntimeException("Unable to create RabbitMQ channel from the factory", ex);
         }
 
         if (initializer != null) {
@@ -126,11 +126,11 @@ public class RabbitMqSpout extends BaseRichSpout {
         }
     }
 
-    RabbitMqChannelProvider createRabbitMqChannelProvider(Map conf) { // package-private for testing
+    RabbitMqChannelFactory createRabbitMqChannelFactory(Map conf) { // package-private for testing
         if (rabbitMqConfig == null) {
-            return RabbitMqChannelProvider.withStormConfig(conf);
+            return RabbitMqChannelFactory.withStormConfig(conf);
         } else {
-            return RabbitMqChannelProvider.withRabbitMqConfig(rabbitMqConfig);
+            return RabbitMqChannelFactory.withRabbitMqConfig(rabbitMqConfig);
         }
     }
 
@@ -232,11 +232,11 @@ public class RabbitMqSpout extends BaseRichSpout {
     @Override
     public void close() {
         try {
-            rabbitMqChannelProvider.cleanup();
+            rabbitMqChannelFactory.cleanup();
         } catch (AlreadyClosedException ex) {
             log.info("Connection is already closed");
         } catch (Exception ex) {
-            log.error("Unable to cleanup RabbitMQ provider", ex);
+            log.error("Unable to cleanup RabbitMQ channel factory", ex);
         }
         rabbitMqMessageScheme.cleanup();
     }

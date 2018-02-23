@@ -48,7 +48,7 @@ public class RabbitMqBolt extends BaseRichBolt {
     private boolean mandatory;
     private boolean immediate;
 
-    private RabbitMqChannelProvider rabbitMqChannelProvider;
+    private RabbitMqChannelFactory rabbitMqChannelFactory;
     private Channel channel;
     
     public RabbitMqBolt(TupleToRabbitMqMessageConverter tupleToRabbitMqMessageConverter) {
@@ -69,26 +69,26 @@ public class RabbitMqBolt extends BaseRichBolt {
 
         tupleToRabbitMqMessageConverter.prepare(stormConf, context);
         
-        rabbitMqChannelProvider = createRabbitMqChannelProvider(stormConf);
+        rabbitMqChannelFactory = createRabbitMqChannelFactory(stormConf);
         
         try {
-            rabbitMqChannelProvider.prepare();
+            rabbitMqChannelFactory.prepare();
         } catch (IOException | TimeoutException ex) {
-            throw new RuntimeException("Unable to prepare RabbitMQ channel provider", ex);
+            throw new RuntimeException("Unable to prepare RabbitMQ channel factory", ex);
         }
 
         try {
-            channel = rabbitMqChannelProvider.getChannel();
+            channel = rabbitMqChannelFactory.createChannel();
         } catch (Exception ex) {
-            throw new RuntimeException("Unable to get RabbitMQ channel from the provider", ex);
+            throw new RuntimeException("Unable to create RabbitMQ channel from the factory", ex);
         }
     }
 
-    RabbitMqChannelProvider createRabbitMqChannelProvider(Map stormConf) { // package-private for testing
+    RabbitMqChannelFactory createRabbitMqChannelFactory(Map stormConf) { // package-private for testing
         if (rabbitMqConfig == null) {
-            return RabbitMqChannelProvider.withStormConfig(stormConf);
+            return RabbitMqChannelFactory.withStormConfig(stormConf);
         } else {
-            return RabbitMqChannelProvider.withRabbitMqConfig(rabbitMqConfig);
+            return RabbitMqChannelFactory.withRabbitMqConfig(rabbitMqConfig);
         }
     }
 
@@ -115,7 +115,7 @@ public class RabbitMqBolt extends BaseRichBolt {
             collector.fail(input);
             return;
         }
-        
+
         collector.ack(input);
     }
 
@@ -127,9 +127,9 @@ public class RabbitMqBolt extends BaseRichBolt {
     @Override
     public void cleanup() {
         try {
-            rabbitMqChannelProvider.cleanup();
+            rabbitMqChannelFactory.cleanup();
         } catch (Exception ex) {
-            log.error("Unable to cleanup RabbitMQ provider", ex);
+            log.error("Unable to cleanup RabbitMQ channel factory", ex);
         }
         tupleToRabbitMqMessageConverter.cleanup();
     }

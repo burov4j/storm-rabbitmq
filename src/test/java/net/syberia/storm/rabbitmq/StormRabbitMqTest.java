@@ -25,12 +25,12 @@ import static org.mockito.Mockito.spy;
  */
 public class StormRabbitMqTest extends RabbitMqTest {
 
-    protected RabbitMqChannelProvider rabbitMqChannelProvider;
+    protected RabbitMqChannelFactory rabbitMqChannelFactory;
 
     @Before
-    public void setUpProvider() throws Exception {
-        rabbitMqChannelProvider = spy(RabbitMqChannelProvider.class);
-        doReturn(mockConnectionFactory).when(rabbitMqChannelProvider).createConnectionFactory();
+    public void setUpChannelFactory() throws Exception {
+        rabbitMqChannelFactory = spy(RabbitMqChannelFactory.class);
+        doReturn(mockConnectionFactory).when(rabbitMqChannelFactory).createConnectionFactory();
     }
 
 }
