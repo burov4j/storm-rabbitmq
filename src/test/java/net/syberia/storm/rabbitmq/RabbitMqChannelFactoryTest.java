@@ -19,7 +19,7 @@ import com.rabbitmq.client.Address;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ConnectionFactory;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import org.junit.Test;
@@ -99,8 +99,7 @@ public class RabbitMqChannelFactoryTest extends RabbitMqTest {
 
     @Test
     public void notEquals() {
-        Map<String, Object> rabbitMqConf = new HashMap<>(1);
-        rabbitMqConf.put(RabbitMqConfig.KEY_HOST, "anotherHost");
+        Map<String, Object> rabbitMqConf = Collections.singletonMap(RabbitMqConfig.KEY_HOST, "anotherHost");
         RabbitMqConfig rabbitMqConfig = new RabbitMqConfig(rabbitMqConf);
         RabbitMqChannelFactory factory1 = new RabbitMqChannelFactory(),
                 factory2 = new RabbitMqChannelFactory(rabbitMqConfig);
@@ -116,8 +115,7 @@ public class RabbitMqChannelFactoryTest extends RabbitMqTest {
 
     @Test
     public void hashCodeNotEquals() {
-        Map<String, Object> rabbitMqConf = new HashMap<>(1);
-        rabbitMqConf.put(RabbitMqConfig.KEY_HOST, "anotherHost");
+        Map<String, Object> rabbitMqConf = Collections.singletonMap(RabbitMqConfig.KEY_HOST, "anotherHost");
         RabbitMqConfig rabbitMqConfig = new RabbitMqConfig(rabbitMqConf);
         RabbitMqChannelFactory factory1 = new RabbitMqChannelFactory(),
                 factory2 = new RabbitMqChannelFactory(rabbitMqConfig);
@@ -126,8 +124,7 @@ public class RabbitMqChannelFactoryTest extends RabbitMqTest {
 
     @Test
     public void withStormConfig() {
-        Map<String, Object> stormConf = new HashMap<>(1);
-        stormConf.put(RabbitMqConfig.KEY_USERNAME, "withStormConfig test user");
+        Map<String, Object> stormConf = Collections.singletonMap(RabbitMqConfig.KEY_USERNAME, "withStormConfig test user");
         RabbitMqChannelFactory factory1 = RabbitMqChannelFactory.withStormConfig(stormConf),
                 factory2 = RabbitMqChannelFactory.withStormConfig(stormConf);
         assertTrue(factory1 == factory2);

@@ -15,7 +15,7 @@
  */
 package net.syberia.storm.rabbitmq;
 
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
@@ -28,101 +28,91 @@ public class ConfigFetcherTest {
 
     @Test
     public void fetchStringPropertyExists() {
-        Map<String, Object> conf = new HashMap<>(1);
         String propertyKey = "propertyKey",
                 propertyValue = "propertyValue";
-        conf.put(propertyKey, propertyValue);
+        Map<String, Object> conf = Collections.singletonMap(propertyKey, propertyValue);
         assertEquals(propertyValue, ConfigFetcher.fetchStringProperty(conf, propertyKey));
         assertEquals(propertyValue, ConfigFetcher.fetchStringProperty(conf, propertyKey, "defaultValue"));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void fetchStringPropertyNotExists() {
-        Map<String, Object> conf = new HashMap<>(1);
         String propertyKey = "propertyKey",
                 anotherKey = "anotherKey",
                 propertyValue = "propertyValue",
                 anotherValue = "anotherValue";
-        conf.put(propertyKey, propertyValue);
+        Map<String, Object> conf = Collections.singletonMap(propertyKey, propertyValue);
         assertEquals(anotherValue, ConfigFetcher.fetchStringProperty(conf, anotherKey, anotherValue));
         ConfigFetcher.fetchStringProperty(conf, anotherKey);
     }
 
     @Test
     public void fetchIntegerPropertyExists() {
-        Map<String, Object> conf = new HashMap<>(1);
         String propertyKey = "propertyKey";
         int propertyValue = 445342;
-        conf.put(propertyKey, propertyValue);
+        Map<String, Object> conf = Collections.singletonMap(propertyKey, propertyValue);
         assertEquals(propertyValue, ConfigFetcher.fetchIntegerProperty(conf, propertyKey, 556634));
     }
 
     @Test
     public void fetchIntegerPropertyNotExists() {
-        Map<String, Object> conf = new HashMap<>(1);
         String propertyKey = "propertyKey",
                 anotherKey = "anotherKey";
         int propertyValue = 445342,
                 anotherValue = 556634;
-        conf.put(propertyKey, propertyValue);
+        Map<String, Object> conf = Collections.singletonMap(propertyKey, propertyValue);
         assertEquals(anotherValue, ConfigFetcher.fetchIntegerProperty(conf, anotherKey, anotherValue));
     }
     
     @Test
     public void fetchLongPropertyExists() {
-        Map<String, Object> conf = new HashMap<>(1);
         String propertyKey = "propertyKey";
         long propertyValue = 445342L;
-        conf.put(propertyKey, propertyValue);
+        Map<String, Object> conf = Collections.singletonMap(propertyKey, propertyValue);
         assertEquals(propertyValue, ConfigFetcher.fetchLongProperty(conf, propertyKey, 556634L));
     }
 
     @Test
     public void fetchLongPropertyNotExists() {
-        Map<String, Object> conf = new HashMap<>(1);
         String propertyKey = "propertyKey",
                 anotherKey = "anotherKey";
         long propertyValue = 445342L,
                 anotherValue = 556634L;
-        conf.put(propertyKey, propertyValue);
+        Map<String, Object> conf = Collections.singletonMap(propertyKey, propertyValue);
         assertEquals(anotherValue, ConfigFetcher.fetchLongProperty(conf, anotherKey, anotherValue));
     }
     
     @Test
     public void fetchIntegerPropertyButLong() {
-        Map<String, Object> conf = new HashMap<>(1);
         String propertyKey = "propertyKey";
         long propertyValue = 445342;
-        conf.put(propertyKey, propertyValue);
+        Map<String, Object> conf = Collections.singletonMap(propertyKey, propertyValue);
         assertEquals(propertyValue, ConfigFetcher.fetchIntegerProperty(conf, propertyKey, 10));
     }
 
     @Test
     public void fetchBooleanPropertyExists() {
-        Map<String, Object> conf = new HashMap<>(1);
         String propertyKey = "propertyKey";
         final boolean propertyValue = true;
-        conf.put(propertyKey, propertyValue);
+        Map<String, Object> conf = Collections.singletonMap(propertyKey, propertyValue);
         assertEquals(propertyValue, ConfigFetcher.fetchBooleanProperty(conf, propertyKey, false));
     }
 
     @Test
     public void fetchBooleanPropertyNotExists() {
-        Map<String, Object> conf = new HashMap<>(1);
         String propertyKey = "propertyKey",
                 anotherKey = "anotherKey";
         final boolean propertyValue = true,
                 anotherValue = false;
-        conf.put(propertyKey, propertyValue);
+        Map<String, Object> conf = Collections.singletonMap(propertyKey, propertyValue);
         assertEquals(anotherValue, ConfigFetcher.fetchBooleanProperty(conf, anotherKey, anotherValue));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void illegalArgumentException() {
-        Map<String, Object> conf = new HashMap<>(1);
         String propertyKey = "propertyKey";
         int illegalArgument = 0;
-        conf.put(propertyKey, illegalArgument);
+        Map<String, Object> conf = Collections.singletonMap(propertyKey, illegalArgument);
         ConfigFetcher.fetchStringProperty(conf, propertyKey);
     }
 

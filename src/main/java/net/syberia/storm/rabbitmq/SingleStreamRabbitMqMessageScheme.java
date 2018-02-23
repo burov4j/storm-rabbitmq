@@ -17,7 +17,8 @@ package net.syberia.storm.rabbitmq;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Envelope;
-import java.util.HashMap;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.apache.storm.tuple.Fields;
@@ -53,9 +54,8 @@ public abstract class SingleStreamRabbitMqMessageScheme implements RabbitMqMessa
 
     @Override
     public final Map<String, Fields> getStreamsOutputFields() {
-        Map<String, Fields> outputFields = new HashMap<>(1);
-        outputFields.put(streamId, getOutputFields());
-        return outputFields;
+        Fields outputFields = getOutputFields();
+        return Collections.singletonMap(streamId, outputFields);
     }
 
     public abstract Fields getOutputFields();

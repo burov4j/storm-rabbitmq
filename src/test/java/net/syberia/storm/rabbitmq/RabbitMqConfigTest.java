@@ -15,6 +15,7 @@
  */
 package net.syberia.storm.rabbitmq;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import static org.junit.Assert.assertEquals;
@@ -60,8 +61,7 @@ public class RabbitMqConfigTest {
     
     @Test
     public void notEquals() {
-        Map<String, Object> rabbitMqConf = new HashMap<>(1);
-        rabbitMqConf.put(RabbitMqConfig.KEY_HOST, "anotherHost");
+        Map<String, Object> rabbitMqConf = Collections.singletonMap(RabbitMqConfig.KEY_HOST, "anotherHost");
         RabbitMqConfig rabbitMqConfig1 = new RabbitMqConfig(),
                 rabbitMqConfig2 = new RabbitMqConfig(rabbitMqConf);
         assertNotEquals(rabbitMqConfig1, rabbitMqConfig2);
@@ -76,8 +76,7 @@ public class RabbitMqConfigTest {
     
     @Test
     public void hashCodeNotEquals() {
-        Map<String, Object> rabbitMqConf = new HashMap<>(1);
-        rabbitMqConf.put(RabbitMqConfig.KEY_HOST, "anotherHost");
+        Map<String, Object> rabbitMqConf = Collections.singletonMap(RabbitMqConfig.KEY_HOST, "anotherHost");
         RabbitMqConfig rabbitMqConfig1 = new RabbitMqConfig(),
                 rabbitMqConfig2 = new RabbitMqConfig(rabbitMqConf);
         assertNotEquals(rabbitMqConfig1.hashCode(), rabbitMqConfig2.hashCode());

@@ -24,13 +24,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
-import static org.junit.Assert.fail;
 import org.apache.storm.spout.SpoutOutputCollector;
 import org.apache.storm.task.TopologyContext;
 import org.apache.storm.topology.OutputFieldsDeclarer;
 import org.apache.storm.tuple.Fields;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -44,17 +42,10 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
 
     private static final String TEST_QUEUE_NAME = "testQueue";
 
-    private static Map<String, Object> MINIMUM_CONF;
+    private static Map<String, Object> MINIMUM_CONF = Collections.singletonMap(RabbitMqSpout.KEY_QUEUE_NAME, TEST_QUEUE_NAME);
 
     private SpoutOutputCollector mockSpoutOutputCollector;
     private TopologyContext mockTopologyContext;
-
-    @BeforeClass
-    public static void setUpClass() {
-        MINIMUM_CONF = new HashMap<>(1);
-        MINIMUM_CONF.put(RabbitMqSpout.KEY_QUEUE_NAME, TEST_QUEUE_NAME);
-        MINIMUM_CONF = Collections.unmodifiableMap(MINIMUM_CONF);
-    }
 
     @Before
     public void setUp() {
