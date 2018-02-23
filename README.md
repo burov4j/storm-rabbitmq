@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/anderelate/storm-rabbitmq.png)](https://travis-ci.org/anderelate/storm-rabbitmq)
 [![codecov](https://codecov.io/gh/anderelate/storm-rabbitmq/branch/master/graph/badge.svg)](https://codecov.io/gh/anderelate/storm-rabbitmq)
 
-Предоставляет базовые реализации интерфейсов [IRichSpout](https://storm.apache.org/releases/1.2.0/javadocs/org/apache/storm/topology/IRichSpout.html) и [IRichBolt](https://storm.apache.org/releases/1.2.0/javadocs/org/apache/storm/topology/IRichBolt.html) для взаимодействия с [RabbitMQ](https://www.rabbitmq.com/) из топологий [Apache Storm](http://storm.apache.org/).
+Предоставляет базовые реализации интерфейсов [IRichSpout](https://storm.apache.org/releases/1.2.1/javadocs/org/apache/storm/topology/IRichSpout.html) и [IRichBolt](https://storm.apache.org/releases/1.2.1/javadocs/org/apache/storm/topology/IRichBolt.html) для взаимодействия с [RabbitMQ](https://www.rabbitmq.com/) из топологий [Apache Storm](http://storm.apache.org/).
 
 ## RabbitMQ Connection
 
@@ -17,6 +17,7 @@ RabbitMqConfig rabbitMqConfig = new RabbitMqConfigBuilder()
                 .setRequestedHeartbeat(60)
                 .setVirtualHost("/")
                 .build();
+
 TopologyBuilder builder = new TopologyBuilder();
 builder.setSpout("rabbitmq-spout", new RabbitMqSpout(rabbitMqConfig, scheme))
        .addConfiguration(RabbitMqSpout.KEY_QUEUE_NAME, "myQueue");
@@ -43,6 +44,7 @@ builder.setSpout("rabbitmq-spout", new RabbitMqSpout(scheme))
 RabbitMqConfig rabbitMqConfig = new RabbitMqConfigBuilder()
                 .setAddresses("localhost:5672")
                 .build();
+
 TopologyBuilder builder = new TopologyBuilder();
 builder.setSpout("rabbitmq-spout", new RabbitMqSpout(rabbitMqConfig, scheme))
        .addConfiguration(RabbitMqSpout.KEY_QUEUE_NAME, "myQueue");
@@ -155,4 +157,3 @@ builder.setBolt("rabbitmq-bolt", rabbitMqBolt)
 ```
 
 Подробнее о параметрах для работы с RabbitMQ вы можете прочитать здесь: https://www.rabbitmq.com/amqp-0-9-1-reference.html
-О том, что такое Spout'ы, Bolt'ы, и как составлять топологии, можно прочитать на официальном сайте Apache Storm: http://storm.apache.org/
