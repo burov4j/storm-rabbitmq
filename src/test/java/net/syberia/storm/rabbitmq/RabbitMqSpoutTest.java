@@ -166,7 +166,8 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
 
     @Test(expected = RuntimeException.class)
     public void initializerException() {
-        RabbitMqSpout rabbitMqSpout = new RabbitMqSpout(new EmptyRabbitMqMessageScheme());
+        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
+        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
         rabbitMqSpout.setInitializer((Channel channel) -> {
             throw new IOException();
         });
@@ -174,9 +175,34 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
     }
 
     @Test(expected = RuntimeException.class)
-    public void unableToOpen() throws IOException, TimeoutException {
+    public void unableToPrepare() throws IOException, TimeoutException {
         doThrow(IOException.class).when(rabbitMqChannelFactory).prepare();
-        RabbitMqSpout rabbitMqSpout = new RabbitMqSpout(new EmptyRabbitMqMessageScheme());
+        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
+        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
+        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void unableToCreateChannel() throws IOException, TimeoutException {
+        doThrow(IOException.class).when(rabbitMqChannelFactory).createChannel();
+        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
+        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
+        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void unableToSetQos() throws IOException, TimeoutException {
+        doThrow(IOException.class).when(mockChannel).basicQos(anyInt());
+        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
+        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
+        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
+    }
+
+    @Test(expected = RuntimeException.class)
+    public void unableToSetConsume() throws IOException, TimeoutException {
+        doThrow(IOException.class).when(mockChannel).basicConsume(anyString(), anyBoolean(), anyString(), any());
+        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
+        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
         rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
     }
 

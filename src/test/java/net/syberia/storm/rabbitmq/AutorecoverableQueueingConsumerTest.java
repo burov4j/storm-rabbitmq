@@ -21,6 +21,9 @@ import java.io.IOException;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.*;
+
+import com.rabbitmq.client.ShutdownSignalException;
 import org.junit.Test;
 
 /**
@@ -28,18 +31,32 @@ import org.junit.Test;
  * @author Andrey Burov
  */
 public class AutorecoverableQueueingConsumerTest {
-    
+
     @Test
     public void basicUsage() throws IOException, InterruptedException {
         AutorecoverableQueueingConsumer consumer = new AutorecoverableQueueingConsumer(null);
         Envelope envelope = new Envelope(0, true, null, null);
         AMQP.BasicProperties properties = new AMQP.BasicProperties();
         byte[] messageBody = "messageBody".getBytes();
+
+        ShutdownSignalException shutdownSignalException = mock(ShutdownSignalException.class);
+        doReturn(new StackTraceElement[0]).when(shutdownSignalException).getStackTrace();
+
+        doReturn(true).when(shutdownSignalException).isInitiatedByApplication();
+        consumer.handleShutdownSignal(null, shutdownSignalException);
+
         consumer.handleDelivery(null, envelope, properties, messageBody);
+
+        doReturn(false).when(shutdownSignalException).isInitiatedByApplication();
+        consumer.handleShutdownSignal(null, shutdownSignalException);
+
+        verify(shutdownSignalException, times(2)).isInitiatedByApplication();
+
         RabbitMqMessage message1 = consumer.nextMessage(100);
         assertEquals(envelope, message1.getEnvelope());
         assertEquals(properties, message1.getProperties());
         assertArrayEquals(messageBody, message1.getBody());
+
         RabbitMqMessage message2 = consumer.nextMessage(100);
         assertNull(message2);
     }

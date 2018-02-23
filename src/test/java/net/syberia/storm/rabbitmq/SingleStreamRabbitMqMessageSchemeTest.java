@@ -64,7 +64,7 @@ public class SingleStreamRabbitMqMessageSchemeTest {
         StreamedTuple streamedTuple = rabbitMqMessageScheme.convertToStreamedTuple(null, null, null);
         assertNotNull("Streamed tuple is null", streamedTuple);
         assertEquals(streamId, streamedTuple.getStreamId());
-        assertEquals(stringValue, (String) streamedTuple.getTuple().get(0));
+        assertEquals(stringValue, streamedTuple.getTuple().get(0));
 
         Map<String, Fields> outputFields = rabbitMqMessageScheme.getStreamsOutputFields();
         assertEquals(stringField, outputFields.get(streamId).get(0));
