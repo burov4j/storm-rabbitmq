@@ -81,6 +81,34 @@ class MyRabbitMqMessageScheme implements RabbitMqMessageScheme {
 }
 ```
 
+Если вам нужен только один исходящий поток, то вы можете использовать класс SingleStreamRabbitMqMessageScheme:
+
+```java
+class MyRabbitMqMessageScheme extends SingleStreamRabbitMqMessageScheme {
+
+    @Override
+    public void prepare(Map config, TopologyContext context) {
+        // your implementation here
+    }
+                
+    @Override
+    public List<Object> convertToTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception {
+        // your implementation here
+    }
+    
+    @Override
+    public Fields getOutputFields() {
+        // your implementation here
+    }
+    
+    @Override
+    public void cleanup() {
+        // your implementation here
+    }
+
+}
+```
+
 Далее вам необходимо передать вашу реализацию в RabbitMqSpout:
 
 ```java
