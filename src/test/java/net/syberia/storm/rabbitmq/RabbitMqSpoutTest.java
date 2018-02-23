@@ -229,7 +229,7 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
 
     @Test
     public void unableToClose() throws Exception {
-        doThrow(Exception.class).when(rabbitMqChannelFactory).cleanup();
+        doThrow(IOException.class).when(rabbitMqChannelFactory).cleanup();
         RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
         doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
         rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
