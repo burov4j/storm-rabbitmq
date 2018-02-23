@@ -9,8 +9,7 @@ deploy:
   script: mvn deploy
   on:
     tags: true
-after_deploy:
-  - bash <(curl -s https://codecov.io/bash)
+    branch: master
 notifications:
   email: false
 cache:
