@@ -41,9 +41,9 @@ import static org.mockito.Mockito.*;
  */
 public class RabbitMqSpoutTest extends StormRabbitMqTest {
 
-    private static final String TEST_QUEUE_NAME = "testQueue";
+    private static final long TEST_MESSAGE_ID = 42;
 
-    private static Map<String, Object> MINIMUM_CONF = Collections.singletonMap(RabbitMqSpout.KEY_QUEUE_NAME, TEST_QUEUE_NAME);
+    private static Map<String, Object> MINIMUM_CONF = Collections.singletonMap(RabbitMqSpout.KEY_QUEUE_NAME, "testQueue");
 
     private SpoutOutputCollector mockSpoutOutputCollector;
     private TopologyContext mockTopologyContext;
@@ -57,43 +57,36 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void queueNotSpecified() {
-        RabbitMqSpout rabbitMqSpout = new RabbitMqSpout(new EmptyRabbitMqMessageScheme());
+        RabbitMqSpout rabbitMqSpout = createSimpleRabbitMqSpout();
         rabbitMqSpout.open(Collections.EMPTY_MAP, mockTopologyContext, mockSpoutOutputCollector);
     }
 
     @Test
     public void messageFiltered() throws InterruptedException, IOException {
-        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
-        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
+        RabbitMqSpout rabbitMqSpout = createAndOpenSimpleRabbitMqSpout();
         rabbitMqSpout.activate();
-        long messageId = 435;
-        Envelope envelope = new Envelope(messageId, false, null, null);
-        AutorecoverableQueueingConsumer mockQueueingConsumer = mock(AutorecoverableQueueingConsumer.class);
-        RabbitMqMessage message = new RabbitMqMessage(envelope, null, null);
-        when(mockQueueingConsumer.nextMessage(anyLong())).thenReturn(message, new RabbitMqMessage[]{null});
-        rabbitMqSpout.queueingConsumer = mockQueueingConsumer;
+
+        prepareMessageForConsumer(rabbitMqSpout);
+
         rabbitMqSpout.nextTuple();
         rabbitMqSpout.close();
-        verify(mockChannel, times(1)).basicAck(messageId, false);
+
+        verify(mockChannel, times(1)).basicAck(TEST_MESSAGE_ID, false);
         verify(rabbitMqChannelFactory, times(1)).cleanup();
     }
 
     @Test
     public void messageFilteredAndUnableToAck() throws InterruptedException, IOException {
-        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
-        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
+        RabbitMqSpout rabbitMqSpout = createAndOpenSimpleRabbitMqSpout();
         rabbitMqSpout.activate();
-        long messageId = 435;
-        Envelope envelope = new Envelope(messageId, false, null, null);
-        AutorecoverableQueueingConsumer mockQueueingConsumer = mock(AutorecoverableQueueingConsumer.class);
-        RabbitMqMessage message = new RabbitMqMessage(envelope, null, null);
-        doThrow(IOException.class).when(mockChannel).basicAck(messageId, false);
-        when(mockQueueingConsumer.nextMessage(anyLong())).thenReturn(message, new RabbitMqMessage[]{null});
-        rabbitMqSpout.queueingConsumer = mockQueueingConsumer;
+
+        prepareMessageForConsumer(rabbitMqSpout);
+
+        doThrow(IOException.class).when(mockChannel).basicAck(TEST_MESSAGE_ID, false);
+
         rabbitMqSpout.nextTuple();
-        verify(mockChannel, times(1)).basicAck(messageId, false);
+
+        verify(mockChannel, times(1)).basicAck(TEST_MESSAGE_ID, false);
         verify(mockSpoutOutputCollector, times(1)).reportError(any(IOException.class));
     }
 
@@ -107,18 +100,16 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
                 return new StreamedTuple(streamId, tuple);
             }
         }));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
-        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
+        prepareMockRabbitMqChannelFactory(rabbitMqSpout);
+        openSimpleRabbitMqSpout(rabbitMqSpout);
         rabbitMqSpout.activate();
-        long messageId = 435;
-        Envelope envelope = new Envelope(messageId, false, null, null);
-        AutorecoverableQueueingConsumer mockQueueingConsumer = mock(AutorecoverableQueueingConsumer.class);
-        RabbitMqMessage message = new RabbitMqMessage(envelope, null, null);
-        when(mockQueueingConsumer.nextMessage(anyLong())).thenReturn(message, new RabbitMqMessage[]{null});
-        rabbitMqSpout.queueingConsumer = mockQueueingConsumer;
+
+        prepareMessageForConsumer(rabbitMqSpout);
+
         rabbitMqSpout.nextTuple();
-        verify(mockChannel, times(0)).basicAck(messageId, false);
-        verify(mockSpoutOutputCollector, times(1)).emit(streamId, tuple, messageId);
+
+        verify(mockChannel, times(0)).basicAck(TEST_MESSAGE_ID, false);
+        verify(mockSpoutOutputCollector, times(1)).emit(streamId, tuple, TEST_MESSAGE_ID);
     }
 
     @Test
@@ -129,17 +120,15 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
                 throw new RuntimeException();
             }
         }));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
-        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
+        prepareMockRabbitMqChannelFactory(rabbitMqSpout);
+        openSimpleRabbitMqSpout(rabbitMqSpout);
         rabbitMqSpout.activate();
-        long messageId = 435;
-        Envelope envelope = new Envelope(messageId, false, null, null);
-        AutorecoverableQueueingConsumer mockQueueingConsumer = mock(AutorecoverableQueueingConsumer.class);
-        RabbitMqMessage message = new RabbitMqMessage(envelope, null, null);
-        when(mockQueueingConsumer.nextMessage(anyLong())).thenReturn(message, new RabbitMqMessage[]{null});
-        rabbitMqSpout.queueingConsumer = mockQueueingConsumer;
+
+        prepareMessageForConsumer(rabbitMqSpout);
+
         rabbitMqSpout.nextTuple();
-        verify(mockChannel, times(1)).basicReject(messageId, false);
+
+        verify(mockChannel, times(1)).basicReject(TEST_MESSAGE_ID, false);
         verify(mockSpoutOutputCollector, times(1)).reportError(any(RuntimeException.class));
     }
 
@@ -151,30 +140,37 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
                 throw new RuntimeException();
             }
         }));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
-        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
+        prepareMockRabbitMqChannelFactory(rabbitMqSpout);
+        openSimpleRabbitMqSpout(rabbitMqSpout);
         rabbitMqSpout.activate();
-        long messageId = 435;
-        Envelope envelope = new Envelope(messageId, false, null, null);
+
+        prepareMessageForConsumer(rabbitMqSpout);
+
+        doThrow(IOException.class).when(mockChannel).basicReject(TEST_MESSAGE_ID, false);
+
+        rabbitMqSpout.nextTuple();
+
+        verify(mockChannel, times(1)).basicReject(TEST_MESSAGE_ID, false);
+        verify(mockSpoutOutputCollector, times(2)).reportError(any(Exception.class));
+    }
+
+    private void prepareMessageForConsumer(RabbitMqSpout rabbitMqSpout) throws InterruptedException, IOException {
+        Envelope envelope = new Envelope(TEST_MESSAGE_ID, false, null, null);
         AutorecoverableQueueingConsumer mockQueueingConsumer = mock(AutorecoverableQueueingConsumer.class);
         RabbitMqMessage message = new RabbitMqMessage(envelope, null, null);
-        doThrow(IOException.class).when(mockChannel).basicReject(messageId, false);
-        when(mockQueueingConsumer.nextMessage(anyLong())).thenReturn(message, new RabbitMqMessage[]{null});
+        when(mockQueueingConsumer.nextMessage(1L)).thenReturn(message, new RabbitMqMessage[]{null});
         rabbitMqSpout.queueingConsumer = mockQueueingConsumer;
-        rabbitMqSpout.nextTuple();
-        verify(mockChannel, times(1)).basicReject(messageId, false);
-        verify(mockSpoutOutputCollector, times(2)).reportError(any(Exception.class));
     }
 
     @Test
     public void nextMessageInterrupted() throws InterruptedException, IOException {
-        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
-        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
+        RabbitMqSpout rabbitMqSpout = createAndOpenSimpleRabbitMqSpout();
         rabbitMqSpout.activate();
+
         AutorecoverableQueueingConsumer mockQueueingConsumer = mock(AutorecoverableQueueingConsumer.class);
-        when(mockQueueingConsumer.nextMessage(anyLong())).thenThrow(InterruptedException.class);
+        when(mockQueueingConsumer.nextMessage(1L)).thenThrow(InterruptedException.class);
         rabbitMqSpout.queueingConsumer = mockQueueingConsumer;
+
         rabbitMqSpout.nextTuple();
 
         verify(mockChannel, times(0)).basicAck(anyLong(), anyBoolean());
@@ -184,13 +180,13 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
 
     @Test
     public void nextMessageNull() throws InterruptedException, IOException {
-        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
-        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
+        RabbitMqSpout rabbitMqSpout = createAndOpenSimpleRabbitMqSpout();
         rabbitMqSpout.activate();
+
         AutorecoverableQueueingConsumer mockQueueingConsumer = mock(AutorecoverableQueueingConsumer.class);
-        when(mockQueueingConsumer.nextMessage(anyLong())).thenReturn(null);
+        when(mockQueueingConsumer.nextMessage(1L)).thenReturn(null);
         rabbitMqSpout.queueingConsumer = mockQueueingConsumer;
+
         rabbitMqSpout.nextTuple();
 
         verify(mockChannel, times(0)).basicAck(anyLong(), anyBoolean());
@@ -200,105 +196,94 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
 
     @Test
     public void messageAck() throws IOException {
-        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
-        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
-        long messageId = 66453;
-        rabbitMqSpout.ack(messageId);
-        verify(mockChannel, times(1)).basicAck(messageId, false);
+        RabbitMqSpout rabbitMqSpout = createAndOpenSimpleRabbitMqSpout();
+        rabbitMqSpout.ack(TEST_MESSAGE_ID);
+
+        verify(mockChannel, times(1)).basicAck(TEST_MESSAGE_ID, false);
     }
 
     @Test
     public void messageFail() throws IOException {
-        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
-        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, null);
-        long messageId = 66453;
-        rabbitMqSpout.fail(messageId);
-        verify(mockChannel, times(1)).basicReject(messageId, false);
+        RabbitMqSpout rabbitMqSpout = createAndOpenSimpleRabbitMqSpout();
+        rabbitMqSpout.fail(TEST_MESSAGE_ID);
+
+        verify(mockChannel, times(1)).basicReject(TEST_MESSAGE_ID, false);
     }
 
     @Test
     public void processMessageFailed() throws IOException {
-        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
-        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
-        long messageId = 66453;
-        doThrow(IOException.class).when(mockChannel).basicAck(messageId, false);
-        rabbitMqSpout.ack(messageId);
+        RabbitMqSpout rabbitMqSpout = createAndOpenSimpleRabbitMqSpout();
+        doThrow(IOException.class).when(mockChannel).basicAck(TEST_MESSAGE_ID, false);
+        rabbitMqSpout.ack(TEST_MESSAGE_ID);
+
         verify(mockSpoutOutputCollector, times(1)).reportError(any(IOException.class));
     }
 
     @Test
     public void processMessageAutoack() throws IOException {
-        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
+        RabbitMqSpout rabbitMqSpout = createSimpleRabbitMqSpout();
+        prepareMockRabbitMqChannelFactory(rabbitMqSpout);
         Map<String, Object> conf = new HashMap<>(MINIMUM_CONF);
         conf.put(RabbitMqSpout.KEY_AUTO_ACK, true);
         rabbitMqSpout.open(conf, mockTopologyContext, mockSpoutOutputCollector);
-        long messageId = 66453;
-        doThrow(IOException.class).when(mockChannel).basicAck(messageId, false);
-        rabbitMqSpout.ack(messageId);
+
+        doThrow(IOException.class).when(mockChannel).basicAck(TEST_MESSAGE_ID, false);
+
+        rabbitMqSpout.ack(TEST_MESSAGE_ID);
+
         verify(mockSpoutOutputCollector, times(0)).reportError(any(IOException.class));
     }
 
     @Test
     public void alreadyClosedExceptionAck() throws IOException {
-        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
-        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
-        long messageId = 66453;
-        doThrow(AlreadyClosedException.class).when(mockChannel).basicAck(messageId, false);
-        rabbitMqSpout.ack(messageId);
+        RabbitMqSpout rabbitMqSpout = createAndOpenSimpleRabbitMqSpout();
+        doThrow(AlreadyClosedException.class).when(mockChannel).basicAck(TEST_MESSAGE_ID, false);
+        rabbitMqSpout.ack(TEST_MESSAGE_ID);
+
         verify(mockSpoutOutputCollector, times(0)).reportError(any(IOException.class));
     }
 
     @Test
     public void initializerUsage() throws IOException {
-        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
+        RabbitMqSpout rabbitMqSpout = createSimpleRabbitMqSpout();
         rabbitMqSpout.setInitializer(Channel::queueDeclare);
-        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
-        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
+        prepareMockRabbitMqChannelFactory(rabbitMqSpout);
+        openSimpleRabbitMqSpout(rabbitMqSpout);
+
         verify(mockChannel, times(1)).queueDeclare();
     }
 
     @Test(expected = RuntimeException.class)
     public void initializerException() {
-        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
+        RabbitMqSpout rabbitMqSpout = createSimpleRabbitMqSpout();
+        prepareMockRabbitMqChannelFactory(rabbitMqSpout);
         rabbitMqSpout.setInitializer((Channel channel) -> {
             throw new IOException();
         });
-        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
+        openSimpleRabbitMqSpout(rabbitMqSpout);
     }
 
     @Test(expected = RuntimeException.class)
     public void unableToPrepare() throws IOException, TimeoutException {
         doThrow(IOException.class).when(rabbitMqChannelFactory).prepare();
-        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
-        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
+        createAndOpenSimpleRabbitMqSpout();
     }
 
     @Test(expected = RuntimeException.class)
     public void unableToCreateChannel() throws IOException {
         doThrow(IOException.class).when(rabbitMqChannelFactory).createChannel();
-        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
-        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
+        createAndOpenSimpleRabbitMqSpout();
     }
 
     @Test(expected = RuntimeException.class)
     public void unableToSetQos() throws IOException {
         doThrow(IOException.class).when(mockChannel).basicQos(anyInt());
-        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
-        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
+        createAndOpenSimpleRabbitMqSpout();
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void invalidPrefetchCount() {
-        RabbitMqSpout rabbitMqSpout = new RabbitMqSpout(new EmptyRabbitMqMessageScheme());
+        RabbitMqSpout rabbitMqSpout = createSimpleRabbitMqSpout();
         Map<String, Object> conf = new HashMap<>(MINIMUM_CONF);
         conf.put(RabbitMqSpout.KEY_PREFETCH_COUNT, Integer.MIN_VALUE);
         rabbitMqSpout.open(conf, mockTopologyContext, mockSpoutOutputCollector);
@@ -307,9 +292,7 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
     @Test(expected = RuntimeException.class)
     public void unableToSetConsume() throws IOException {
         doThrow(IOException.class).when(mockChannel).basicConsume(anyString(), anyBoolean(), anyString(), any());
-        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
-        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
+        createAndOpenSimpleRabbitMqSpout();
     }
 
     @Test
@@ -329,6 +312,7 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
         });
         OutputFieldsDeclarer mockOutputFieldsDeclarer = mock(OutputFieldsDeclarer.class);
         rabbitMqSpout.declareOutputFields(mockOutputFieldsDeclarer);
+
         verify(mockOutputFieldsDeclarer, times(1)).declareStream(streamId1, fields1);
         verify(mockOutputFieldsDeclarer, times(1)).declareStream(streamId2, fields2);
     }
@@ -336,34 +320,31 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
     @Test
     public void unableToCloseIOException() throws IOException {
         doThrow(IOException.class).when(rabbitMqChannelFactory).cleanup();
-        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
-        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
+        RabbitMqSpout rabbitMqSpout = createAndOpenSimpleRabbitMqSpout();
         rabbitMqSpout.close();
     }
 
     @Test
     public void unableToCloseAlreadyClosedException() throws IOException {
         doThrow(AlreadyClosedException.class).when(rabbitMqChannelFactory).cleanup();
-        RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
-        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
+        RabbitMqSpout rabbitMqSpout = createAndOpenSimpleRabbitMqSpout();
         rabbitMqSpout.close();
     }
 
     @Test
     public void notActiveNextTuple() {
-        RabbitMqSpout rabbitMqSpout = new RabbitMqSpout(new EmptyRabbitMqMessageScheme());
+        RabbitMqSpout rabbitMqSpout = createSimpleRabbitMqSpout();
         rabbitMqSpout.deactivate();
         rabbitMqSpout.nextTuple();
     }
 
     @Test
     public void createRabbitMqChannelFactoryStormConf() {
-        RabbitMqSpout rabbitMqSpout = new RabbitMqSpout(new EmptyRabbitMqMessageScheme());
+        RabbitMqSpout rabbitMqSpout = createSimpleRabbitMqSpout();
         Map<String, Object> conf = Collections.singletonMap(RabbitMqConfig.KEY_USERNAME, "user1");
         RabbitMqChannelFactory channelFactory = rabbitMqSpout.createRabbitMqChannelFactory(conf);
         ConnectionFactory connectionFactory = channelFactory.createConnectionFactory();
+
         assertEquals("user1", connectionFactory.getUsername());
     }
 
@@ -372,11 +353,35 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
         RabbitMqConfig rabbitMqConfig = new RabbitMqConfigBuilder()
                 .setUsername("user1")
                 .build();
-        RabbitMqSpout rabbitMqSpout = new RabbitMqSpout(rabbitMqConfig, new EmptyRabbitMqMessageScheme());
+        RabbitMqSpout rabbitMqSpout = createSimpleRabbitMqSpout(rabbitMqConfig);
         Map<String, Object> conf = Collections.singletonMap(RabbitMqConfig.KEY_USERNAME, "user2");
         RabbitMqChannelFactory channelFactory = rabbitMqSpout.createRabbitMqChannelFactory(conf);
         ConnectionFactory connectionFactory = channelFactory.createConnectionFactory();
+
         assertEquals("user1", connectionFactory.getUsername());
+    }
+
+    private RabbitMqSpout createAndOpenSimpleRabbitMqSpout() {
+        RabbitMqSpout rabbitMqSpout = createSimpleRabbitMqSpout();
+        prepareMockRabbitMqChannelFactory(rabbitMqSpout);
+        openSimpleRabbitMqSpout(rabbitMqSpout);
+        return rabbitMqSpout;
+    }
+
+    private RabbitMqSpout createSimpleRabbitMqSpout() {
+        return spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme()));
+    }
+
+    private RabbitMqSpout createSimpleRabbitMqSpout(RabbitMqConfig rabbitMqConfig) {
+        return spy(new RabbitMqSpout(rabbitMqConfig, new EmptyRabbitMqMessageScheme()));
+    }
+
+    private void prepareMockRabbitMqChannelFactory(RabbitMqSpout rabbitMqSpout) {
+        doReturn(rabbitMqChannelFactory).when(rabbitMqSpout).createRabbitMqChannelFactory(any());
+    }
+
+    private void openSimpleRabbitMqSpout(RabbitMqSpout rabbitMqSpout) {
+        rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
     }
 
 }
