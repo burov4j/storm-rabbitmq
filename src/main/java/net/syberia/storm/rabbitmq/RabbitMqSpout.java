@@ -235,7 +235,7 @@ public class RabbitMqSpout extends BaseRichSpout {
             rabbitMqChannelFactory.cleanup();
         } catch (AlreadyClosedException ex) {
             log.info("Connection is already closed");
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             log.error("Unable to cleanup RabbitMQ channel factory", ex);
         }
         rabbitMqMessageScheme.cleanup();
