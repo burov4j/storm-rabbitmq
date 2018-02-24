@@ -21,10 +21,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
+
+import com.rabbitmq.client.ConnectionFactory;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.tuple.Tuple;
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -76,7 +80,7 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
         stormConf.put(RabbitMqBolt.KEY_MANDATORY, true);
         stormConf.put(RabbitMqBolt.KEY_IMMEDIATE, true);
 
-        doReturn(rabbitMqChannelFactory).when(rabbitMqBolt).createRabbitMqChannelFactory(any());
+        prepareMockRabbitMqChannelFactory(rabbitMqBolt);
 
         rabbitMqBolt.prepare(stormConf, null, mockOutputCollector);
 
@@ -92,25 +96,19 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
     @Test(expected = RuntimeException.class)
     public void unableToPrepare() throws IOException, TimeoutException {
         doThrow(IOException.class).when(rabbitMqChannelFactory).prepare();
-        RabbitMqBolt rabbitMqBolt = spy(new RabbitMqBolt(new EmptyTupleToRabbitMqMessageConverter()));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqBolt).createRabbitMqChannelFactory(any());
-        rabbitMqBolt.prepare(Collections.emptyMap(), null, mockOutputCollector);
+        RabbitMqBolt rabbitMqBolt = createAndPrepareSimpleRabbitMqBolt();
     }
 
     @Test(expected = RuntimeException.class)
     public void unableToCreateChannel() throws Exception {
         doThrow(IOException.class).when(rabbitMqChannelFactory).createChannel();
-        RabbitMqBolt rabbitMqBolt = spy(new RabbitMqBolt(new EmptyTupleToRabbitMqMessageConverter()));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqBolt).createRabbitMqChannelFactory(any());
-        rabbitMqBolt.prepare(Collections.emptyMap(), null, mockOutputCollector);
+        RabbitMqBolt rabbitMqBolt = createAndPrepareSimpleRabbitMqBolt();
     }
 
     @Test
     public void unableToPublish() throws Exception {
         doThrow(IOException.class).when(mockChannel).basicPublish(any(), any(), eq(false), eq(false), any(), any());
-        RabbitMqBolt rabbitMqBolt = spy(new RabbitMqBolt(new EmptyTupleToRabbitMqMessageConverter()));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqBolt).createRabbitMqChannelFactory(any());
-        rabbitMqBolt.prepare(Collections.emptyMap(), null, mockOutputCollector);
+        RabbitMqBolt rabbitMqBolt = createAndPrepareSimpleRabbitMqBolt();
 
         Tuple tuple = mock(Tuple.class);
         rabbitMqBolt.execute(tuple);
@@ -127,8 +125,8 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
                 throw new RuntimeException();
             }
         }));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqBolt).createRabbitMqChannelFactory(any());
-        rabbitMqBolt.prepare(Collections.emptyMap(), null, mockOutputCollector);
+        prepareMockRabbitMqChannelFactory(rabbitMqBolt);
+        prepareSimpleRabbitMqBolt(rabbitMqBolt);
 
         Tuple tuple = mock(Tuple.class);
         rabbitMqBolt.execute(tuple);
@@ -140,10 +138,54 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
     @Test
     public void unableToCleanup() throws Exception {
         doThrow(IOException.class).when(rabbitMqChannelFactory).cleanup();
-        RabbitMqBolt rabbitMqBolt = spy(new RabbitMqBolt(new EmptyTupleToRabbitMqMessageConverter()));
-        doReturn(rabbitMqChannelFactory).when(rabbitMqBolt).createRabbitMqChannelFactory(any());
-        rabbitMqBolt.prepare(Collections.emptyMap(), null, mockOutputCollector);
+        RabbitMqBolt rabbitMqBolt = createAndPrepareSimpleRabbitMqBolt();
         rabbitMqBolt.cleanup();
+    }
+
+    @Test
+    public void createRabbitMqChannelFactoryStormConf() {
+        RabbitMqBolt rabbitMqBolt = createSimpleRabbitMqBolt();
+        Map<String, Object> conf = Collections.singletonMap(RabbitMqConfig.KEY_USERNAME, "user1");
+        RabbitMqChannelFactory channelFactory = rabbitMqBolt.createRabbitMqChannelFactory(conf);
+        ConnectionFactory connectionFactory = channelFactory.createConnectionFactory();
+
+        assertEquals("user1", connectionFactory.getUsername());
+    }
+
+    @Test
+    public void createRabbitMqChannelFactoryRabbitMqConf() {
+        RabbitMqConfig rabbitMqConfig = new RabbitMqConfigBuilder()
+                .setUsername("user1")
+                .build();
+        RabbitMqBolt rabbitMqBolt = createSimpleRabbitMqBolt(rabbitMqConfig);
+        Map<String, Object> conf = Collections.singletonMap(RabbitMqConfig.KEY_USERNAME, "user2");
+        RabbitMqChannelFactory channelFactory = rabbitMqBolt.createRabbitMqChannelFactory(conf);
+        ConnectionFactory connectionFactory = channelFactory.createConnectionFactory();
+
+        assertEquals("user1", connectionFactory.getUsername());
+    }
+
+    private RabbitMqBolt createAndPrepareSimpleRabbitMqBolt() {
+        RabbitMqBolt rabbitMqBolt = createSimpleRabbitMqBolt();
+        prepareMockRabbitMqChannelFactory(rabbitMqBolt);
+        prepareSimpleRabbitMqBolt(rabbitMqBolt);
+        return rabbitMqBolt;
+    }
+
+    private RabbitMqBolt createSimpleRabbitMqBolt() {
+        return spy(new RabbitMqBolt(new EmptyTupleToRabbitMqMessageConverter()));
+    }
+
+    private RabbitMqBolt createSimpleRabbitMqBolt(RabbitMqConfig rabbitMqConfig) {
+        return spy(new RabbitMqBolt(rabbitMqConfig, new EmptyTupleToRabbitMqMessageConverter()));
+    }
+
+    private void prepareMockRabbitMqChannelFactory(RabbitMqBolt rabbitMqBolt) {
+        doReturn(rabbitMqChannelFactory).when(rabbitMqBolt).createRabbitMqChannelFactory(any());
+    }
+
+    private void prepareSimpleRabbitMqBolt(RabbitMqBolt rabbitMqBolt) {
+        rabbitMqBolt.prepare(Collections.emptyMap(), null, mockOutputCollector);
     }
 
 }

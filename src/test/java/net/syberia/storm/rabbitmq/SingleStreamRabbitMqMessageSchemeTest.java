@@ -100,7 +100,7 @@ public class SingleStreamRabbitMqMessageSchemeTest {
     }
 
     @Test
-    public void filterMessage() throws Exception {
+    public void filterMessageNullTuple() throws Exception {
         RabbitMqMessageScheme rabbitMqMessageScheme = new SingleStreamRabbitMqMessageScheme() {
             @Override
             public void prepare(Map config, TopologyContext context) {
@@ -110,6 +110,33 @@ public class SingleStreamRabbitMqMessageSchemeTest {
             @Override
             public List<Object> convertToTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception {
                 return null;
+            }
+
+            @Override
+            public Fields getOutputFields() {
+                return new Fields("stringField");
+            }
+
+            @Override
+            public void cleanup() {
+                // no operation
+            }
+        };
+        StreamedTuple streamedTuple = rabbitMqMessageScheme.convertToStreamedTuple(null, null, null);
+        assertNull(streamedTuple);
+    }
+
+    @Test
+    public void filterMessageEmptyTuple() throws Exception {
+        RabbitMqMessageScheme rabbitMqMessageScheme = new SingleStreamRabbitMqMessageScheme() {
+            @Override
+            public void prepare(Map config, TopologyContext context) {
+                // no operation
+            }
+
+            @Override
+            public List<Object> convertToTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception {
+                return Collections.emptyList();
             }
 
             @Override

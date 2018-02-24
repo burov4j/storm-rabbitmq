@@ -91,6 +91,18 @@ public class RabbitMqChannelFactoryTest extends RabbitMqTest {
     }
 
     @Test
+    public void closedConnectionPrepare() throws Exception {
+        RabbitMqChannelFactory rabbitMqChannelFactory = spy(RabbitMqChannelFactory.class);
+        doReturn(mockConnectionFactory).when(rabbitMqChannelFactory).createConnectionFactory();
+        doReturn(true).when(mockConnection).isOpen();
+        rabbitMqChannelFactory.prepare();
+        rabbitMqChannelFactory.prepare();
+
+        verify(mockConnection, times(1)).isOpen();
+        verify(mockConnectionFactory, times(1)).newConnection();
+    }
+
+    @Test
     public void equals() throws Exception {
         RabbitMqChannelFactory factory1 = new RabbitMqChannelFactory(),
                 factory2 = new RabbitMqChannelFactory();
