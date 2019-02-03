@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>net.syberia.storm</groupId>
+    <groupId>ru.burov4j.storm</groupId>
     <artifactId>storm-rabbitmq</artifactId>
     <version>0.2.20</version>
     <packaging>jar</packaging>
     <inceptionYear>2017</inceptionYear>
     <name>storm-rabbitmq</name>
     <description>Storm bolt and spout for RabbitMQ</description>
-    <url>https://github.com/anderelate/storm-rabbitmq</url>
+    <url>https://github.com/burov4j/storm-rabbitmq</url>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -120,15 +120,15 @@
     </licenses>
     <developers>
         <developer>
-            <id>anderelate</id>
+            <id>burov4j</id>
             <name>Andrey Burov</name>
-            <email>andreyburov@syberia.net</email>
+            <email>burov4j@yandex.ru</email>
         </developer>
     </developers>
     <scm>
-        <connection>scm:git:git@github.com:anderelate/storm-rabbitmq.git</connection>
-        <developerConnection>scm:git:git@github.com:anderelate/storm-rabbitmq.git</developerConnection>
-        <url>https://github.com/anderelate/storm-rabbitmq</url>
+        <connection>scm:git:git@github.com:burov4j/storm-rabbitmq.git</connection>
+        <developerConnection>scm:git:git@github.com:burov4j/storm-rabbitmq.git</developerConnection>
+        <url>https://github.com/burov4j/storm-rabbitmq</url>
         <tag>HEAD</tag>
     </scm>
     <distributionManagement>
