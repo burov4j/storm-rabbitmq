@@ -35,6 +35,7 @@ import org.apache.storm.tuple.Fields;
  * @author Andrey Burov
  */
 @Slf4j
+@SuppressWarnings("WeakerAccess")
 public class RabbitMqSpout extends BaseRichSpout {
 
     private static final long serialVersionUID = 614091429512483100L;
@@ -47,17 +48,17 @@ public class RabbitMqSpout extends BaseRichSpout {
     private final RabbitMqConfig rabbitMqConfig;
     private final RabbitMqMessageScheme rabbitMqMessageScheme;
 
-    private SpoutOutputCollector collector;
+    private transient SpoutOutputCollector collector;
 
     private boolean requeueOnFail;
     private boolean autoAck;
 
-    private RabbitMqChannelFactory rabbitMqChannelFactory;
-    private Channel channel;
+    private transient RabbitMqChannelFactory rabbitMqChannelFactory;
+    private transient Channel channel;
 
     private RabbitMqInitializer initializer;
 
-    AutorecoverableQueueingConsumer queueingConsumer; // package-private for testing
+    transient AutorecoverableQueueingConsumer queueingConsumer; // package-private for testing
 
     private boolean active;
 
@@ -75,6 +76,7 @@ public class RabbitMqSpout extends BaseRichSpout {
     }
 
     @Override
+    @SuppressWarnings("Duplicates") // no chance to fix this warning
     public void open(Map conf, TopologyContext context, SpoutOutputCollector collector) {
         this.collector = collector;
 
@@ -94,20 +96,20 @@ public class RabbitMqSpout extends BaseRichSpout {
         try {
             rabbitMqChannelFactory.prepare();
         } catch (IOException | TimeoutException ex) {
-            throw new RuntimeException("Unable to prepare RabbitMQ channel factory", ex);
+            throw new PreparationException("Unable to prepare RabbitMQ channel factory", ex);
         }
 
         try {
             channel = rabbitMqChannelFactory.createChannel();
         } catch (Exception ex) {
-            throw new RuntimeException("Unable to create RabbitMQ channel from the factory", ex);
+            throw new PreparationException("Unable to create RabbitMQ channel from the factory", ex);
         }
 
         if (initializer != null) {
             try {
                 initializer.initialize(channel);
             } catch (IOException ex) {
-                throw new RuntimeException("Unable to execute initialization", ex);
+                throw new PreparationException("Unable to execute initialization", ex);
             }
         }
 
@@ -116,13 +118,13 @@ public class RabbitMqSpout extends BaseRichSpout {
         try {
             channel.basicQos(prefetchCount);
         } catch (IOException ex) {
-            throw new RuntimeException("Unable set quality of service", ex);
+            throw new PreparationException("Unable set quality of service", ex);
         }
 
         try {
             channel.basicConsume(queueName, autoAck, context.getThisComponentId(), queueingConsumer);
         } catch (IOException ex) {
-            throw new RuntimeException("Unable to start consuming the queue", ex);
+            throw new PreparationException("Unable to start consuming the queue", ex);
         }
     }
 
@@ -145,6 +147,7 @@ public class RabbitMqSpout extends BaseRichSpout {
             rabbitMqMessage = queueingConsumer.nextMessage(1L);
         } catch (InterruptedException ex) {
             log.info("The consumer interrupted");
+            Thread.currentThread().interrupt();
             return;
         }
 
@@ -240,5 +243,4 @@ public class RabbitMqSpout extends BaseRichSpout {
         }
         rabbitMqMessageScheme.cleanup();
     }
-
 }

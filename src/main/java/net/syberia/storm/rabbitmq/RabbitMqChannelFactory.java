@@ -50,7 +50,7 @@ class RabbitMqChannelFactory {
         return withRabbitMqConfig(rabbitMqConfig);
     }
 
-    public static synchronized RabbitMqChannelFactory withRabbitMqConfig(RabbitMqConfig rabbitMqConfig) {
+    static synchronized RabbitMqChannelFactory withRabbitMqConfig(RabbitMqConfig rabbitMqConfig) {
         RabbitMqChannelFactory factoryWithConfig = KNOWN_FACTORIES.stream()
                 .filter(factory -> factory.rabbitMqConfig.equals(rabbitMqConfig))
                 .findFirst()
@@ -91,7 +91,7 @@ class RabbitMqChannelFactory {
         return rabbitMqConnectionFactory;
     }
 
-    public Channel createChannel() throws IOException {
+    Channel createChannel() throws IOException {
         return rabbitMqConnection.createChannel();
     }
 
@@ -100,5 +100,4 @@ class RabbitMqChannelFactory {
             rabbitMqConnection.close();
         }
     }
-
 }

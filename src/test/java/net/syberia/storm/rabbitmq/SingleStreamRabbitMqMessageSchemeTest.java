@@ -46,7 +46,7 @@ public class SingleStreamRabbitMqMessageSchemeTest {
             }
             
             @Override
-            public List<Object> convertToTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception {
+            public List<Object> convertToTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
                 return Collections.singletonList(stringValue);
             }
 
@@ -79,7 +79,7 @@ public class SingleStreamRabbitMqMessageSchemeTest {
             }
             
             @Override
-            public List<Object> convertToTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception {
+            public List<Object> convertToTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
                 return Collections.singletonList("stringValue");
             }
 
@@ -108,7 +108,7 @@ public class SingleStreamRabbitMqMessageSchemeTest {
             }
             
             @Override
-            public List<Object> convertToTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception {
+            public List<Object> convertToTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
                 return null;
             }
 
@@ -135,7 +135,7 @@ public class SingleStreamRabbitMqMessageSchemeTest {
             }
 
             @Override
-            public List<Object> convertToTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception {
+            public List<Object> convertToTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
                 return Collections.emptyList();
             }
 
@@ -152,5 +152,4 @@ public class SingleStreamRabbitMqMessageSchemeTest {
         StreamedTuple streamedTuple = rabbitMqMessageScheme.convertToStreamedTuple(null, null, null);
         assertNull(streamedTuple);
     }
-
 }

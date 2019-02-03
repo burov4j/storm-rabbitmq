@@ -23,14 +23,13 @@ import static org.mockito.Mockito.spy;
  *
  * @author Andrey Burov
  */
-public class StormRabbitMqTest extends RabbitMqTest {
+public abstract class StormRabbitMqTest extends RabbitMqTest {
 
-    protected RabbitMqChannelFactory rabbitMqChannelFactory;
+    RabbitMqChannelFactory rabbitMqChannelFactory;
 
     @Before
-    public void setUpChannelFactory() throws Exception {
+    public void setUpChannelFactory() {
         rabbitMqChannelFactory = spy(RabbitMqChannelFactory.class);
         doReturn(mockConnectionFactory).when(rabbitMqChannelFactory).createConnectionFactory();
     }
-
 }

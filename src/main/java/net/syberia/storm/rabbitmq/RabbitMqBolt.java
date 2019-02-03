@@ -33,6 +33,7 @@ import org.apache.storm.tuple.Tuple;
  * @author Andrey Burov
  */
 @Slf4j
+@SuppressWarnings("WeakerAccess")
 public class RabbitMqBolt extends BaseRichBolt {
 
     private static final long serialVersionUID = 377563808237437264L;
@@ -43,13 +44,13 @@ public class RabbitMqBolt extends BaseRichBolt {
     private final RabbitMqConfig rabbitMqConfig;
     private final TupleToRabbitMqMessageConverter tupleToRabbitMqMessageConverter;
 
-    private OutputCollector collector;
+    private transient OutputCollector collector;
 
     private boolean mandatory;
     private boolean immediate;
 
-    private RabbitMqChannelFactory rabbitMqChannelFactory;
-    private Channel channel;
+    private transient RabbitMqChannelFactory rabbitMqChannelFactory;
+    private transient Channel channel;
     
     public RabbitMqBolt(TupleToRabbitMqMessageConverter tupleToRabbitMqMessageConverter) {
         this(null, tupleToRabbitMqMessageConverter);
@@ -61,6 +62,7 @@ public class RabbitMqBolt extends BaseRichBolt {
     }
 
     @Override
+    @SuppressWarnings("Duplicates") // no chance to fix this warning
     public void prepare(Map stormConf, TopologyContext context, OutputCollector collector) {
         this.collector = collector;
 
@@ -74,13 +76,13 @@ public class RabbitMqBolt extends BaseRichBolt {
         try {
             rabbitMqChannelFactory.prepare();
         } catch (IOException | TimeoutException ex) {
-            throw new RuntimeException("Unable to prepare RabbitMQ channel factory", ex);
+            throw new PreparationException("Unable to prepare RabbitMQ channel factory", ex);
         }
 
         try {
             channel = rabbitMqChannelFactory.createChannel();
         } catch (Exception ex) {
-            throw new RuntimeException("Unable to create RabbitMQ channel from the factory", ex);
+            throw new PreparationException("Unable to create RabbitMQ channel from the factory", ex);
         }
     }
 
@@ -94,7 +96,8 @@ public class RabbitMqBolt extends BaseRichBolt {
 
     @Override
     public void execute(Tuple input) {
-        String exchange, routingKey;
+        String exchange;
+        String routingKey;
         AMQP.BasicProperties properties;
         byte[] messageBody;
         try {
@@ -133,5 +136,4 @@ public class RabbitMqBolt extends BaseRichBolt {
         }
         tupleToRabbitMqMessageConverter.cleanup();
     }
-
 }

@@ -22,6 +22,7 @@ import java.util.List;
  *
  * @author Andrey Burov
  */
+@SuppressWarnings("WeakerAccess")
 public final class StreamedTuple {
     
     private final String streamId;
@@ -39,5 +40,4 @@ public final class StreamedTuple {
     public List<Object> getTuple() {
         return tuple;
     }
-    
 }

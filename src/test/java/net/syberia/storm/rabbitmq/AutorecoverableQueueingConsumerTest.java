@@ -17,7 +17,6 @@ package net.syberia.storm.rabbitmq;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Envelope;
-import java.io.IOException;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -33,7 +32,7 @@ import org.junit.Test;
 public class AutorecoverableQueueingConsumerTest {
 
     @Test
-    public void basicUsage() throws IOException, InterruptedException {
+    public void basicUsage() throws InterruptedException {
         AutorecoverableQueueingConsumer consumer = new AutorecoverableQueueingConsumer(null);
         Envelope envelope = new Envelope(0, true, null, null);
         AMQP.BasicProperties properties = new AMQP.BasicProperties();
@@ -60,5 +59,4 @@ public class AutorecoverableQueueingConsumerTest {
         RabbitMqMessage message2 = consumer.nextMessage(100);
         assertNull(message2);
     }
-    
 }

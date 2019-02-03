@@ -81,5 +81,4 @@ public class RabbitMqConfigTest {
                 rabbitMqConfig2 = new RabbitMqConfig(rabbitMqConf);
         assertNotEquals(rabbitMqConfig1.hashCode(), rabbitMqConfig2.hashCode());
     }
-
 }

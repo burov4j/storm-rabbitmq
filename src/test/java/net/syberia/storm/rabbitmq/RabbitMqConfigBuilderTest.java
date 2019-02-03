@@ -50,5 +50,4 @@ public class RabbitMqConfigBuilderTest {
         assertEquals(username, rabbitMqConfig.getUsername());
         assertEquals(virtualHost, rabbitMqConfig.getVirtualHost());
     }
-
 }

@@ -30,10 +30,9 @@ public interface RabbitMqMessageScheme extends Serializable {
     
     void prepare(Map config, TopologyContext context);
     
-    StreamedTuple convertToStreamedTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception;
+    StreamedTuple convertToStreamedTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws ConvertionException;
     
     Map<String, Fields> getStreamsOutputFields();
     
     void cleanup();
-    
 }

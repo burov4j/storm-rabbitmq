@@ -26,6 +26,7 @@ import org.apache.storm.shade.org.apache.commons.lang.StringUtils;
  * @author Andrey Burov
  */
 @EqualsAndHashCode
+@SuppressWarnings("WeakerAccess")
 public class RabbitMqConfig implements Serializable {
 
     private static final long serialVersionUID = 5275552557426635758L;
@@ -119,5 +120,4 @@ public class RabbitMqConfig implements Serializable {
     void setRequestedHeartbeat(int requestedHeartbeat) {
         this.requestedHeartbeat = requestedHeartbeat;
     }
-
 }

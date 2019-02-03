@@ -30,9 +30,9 @@ import static org.mockito.Mockito.mock;
  */
 public abstract class RabbitMqTest {
 
-    protected ConnectionFactory mockConnectionFactory;
-    protected Connection mockConnection;
-    protected Channel mockChannel;
+    ConnectionFactory mockConnectionFactory;
+    Connection mockConnection;
+    Channel mockChannel;
 
     @Before
     public void setUpMocks() throws IOException, TimeoutException {
@@ -42,5 +42,4 @@ public abstract class RabbitMqTest {
         when(mockConnectionFactory.newConnection()).thenReturn(mockConnection);
         when(mockConnection.createChannel()).thenReturn(mockChannel);
     }
-
 }

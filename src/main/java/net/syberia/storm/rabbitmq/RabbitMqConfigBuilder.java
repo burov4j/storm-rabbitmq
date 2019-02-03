@@ -19,6 +19,7 @@ package net.syberia.storm.rabbitmq;
  *
  * @author Andrey Burov
  */
+@SuppressWarnings("WeakerAccess")
 public class RabbitMqConfigBuilder {
 
     private RabbitMqConfig rabbitMqConfig = new RabbitMqConfig();
@@ -63,5 +64,4 @@ public class RabbitMqConfigBuilder {
         rabbitMqConfig = new RabbitMqConfig();
         return resultRabbitMqConfig;
     }
-
 }

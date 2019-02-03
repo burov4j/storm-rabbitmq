@@ -17,6 +17,7 @@ package net.syberia.storm.rabbitmq;
 
 import com.rabbitmq.client.AMQP;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,7 +51,7 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
     public void prepareAndUse() throws Exception {
         String exchange = "testExchange",
                 routingKey = "testRoutingKey";
-        byte[] messageBody = "testMessageBody".getBytes("UTF8");
+        byte[] messageBody = "testMessageBody".getBytes(StandardCharsets.UTF_8);
         AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder().build();
         RabbitMqBolt rabbitMqBolt = spy(new RabbitMqBolt(new EmptyTupleToRabbitMqMessageConverter() {
             @Override
@@ -96,13 +97,13 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
     @Test(expected = RuntimeException.class)
     public void unableToPrepare() throws IOException, TimeoutException {
         doThrow(IOException.class).when(rabbitMqChannelFactory).prepare();
-        RabbitMqBolt rabbitMqBolt = createAndPrepareSimpleRabbitMqBolt();
+        createAndPrepareSimpleRabbitMqBolt();
     }
 
     @Test(expected = RuntimeException.class)
     public void unableToCreateChannel() throws Exception {
         doThrow(IOException.class).when(rabbitMqChannelFactory).createChannel();
-        RabbitMqBolt rabbitMqBolt = createAndPrepareSimpleRabbitMqBolt();
+        createAndPrepareSimpleRabbitMqBolt();
     }
 
     @Test
@@ -118,7 +119,7 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
     }
 
     @Test
-    public void unableToGetMessageBody() throws Exception {
+    public void unableToGetMessageBody() {
         RabbitMqBolt rabbitMqBolt = spy(new RabbitMqBolt(new EmptyTupleToRabbitMqMessageConverter() {
             @Override
             public byte[] getMessageBody(Tuple tuple) {
@@ -187,5 +188,4 @@ public class RabbitMqBoltTest extends StormRabbitMqTest {
     private void prepareSimpleRabbitMqBolt(RabbitMqBolt rabbitMqBolt) {
         rabbitMqBolt.prepare(Collections.emptyMap(), null, mockOutputCollector);
     }
-
 }

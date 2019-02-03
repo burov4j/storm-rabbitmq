@@ -26,5 +26,4 @@ import java.io.Serializable;
 public interface RabbitMqInitializer extends Serializable {
     
     void initialize(Channel channel) throws IOException;
-    
 }

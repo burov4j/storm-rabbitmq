@@ -115,5 +115,4 @@ public class ConfigFetcherTest {
         Map<String, Object> conf = Collections.singletonMap(propertyKey, illegalArgument);
         ConfigFetcher.fetchStringProperty(conf, propertyKey);
     }
-
 }

@@ -27,19 +27,19 @@ class ConfigFetcher {
         // no operation
     }
 
-    public static String fetchStringProperty(Map config, String key) {
+    static String fetchStringProperty(Map config, String key) {
         return fetchStringProperty(config, key, null);
     }
 
-    public static String fetchStringProperty(Map config, String key, String defaultValue) {
+    static String fetchStringProperty(Map config, String key, String defaultValue) {
         return fetchProperty(config, key, String.class, defaultValue);
     }
 
-    public static int fetchIntegerProperty(Map config, String key, int defaultValue) {
+    static int fetchIntegerProperty(Map config, String key, int defaultValue) {
         return fetchNumberProperty(config, key, defaultValue).intValue();
     }
     
-    public static long fetchLongProperty(Map config, String key, long defaultValue) {
+    static long fetchLongProperty(Map config, String key, long defaultValue) {
         return fetchNumberProperty(config, key, defaultValue).longValue();
     }
     
@@ -47,7 +47,8 @@ class ConfigFetcher {
         return fetchProperty(config, key, Number.class, defaultValue);
     }
 
-    public static boolean fetchBooleanProperty(Map config, String key, boolean defaultValue) {
+    @SuppressWarnings("SameParameterValue")
+    static boolean fetchBooleanProperty(Map config, String key, boolean defaultValue) {
         return fetchProperty(config, key, Boolean.class, defaultValue);
     }
 
@@ -67,5 +68,4 @@ class ConfigFetcher {
             }
         }
     }
-
 }

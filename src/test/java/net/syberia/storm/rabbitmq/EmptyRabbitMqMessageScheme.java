@@ -36,7 +36,7 @@ class EmptyRabbitMqMessageScheme implements RabbitMqMessageScheme {
     }
 
     @Override
-    public StreamedTuple convertToStreamedTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception {
+    public StreamedTuple convertToStreamedTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
         return null;
     }
 
@@ -49,5 +49,4 @@ class EmptyRabbitMqMessageScheme implements RabbitMqMessageScheme {
     public void cleanup() {
         // no operation
     }
-
 }

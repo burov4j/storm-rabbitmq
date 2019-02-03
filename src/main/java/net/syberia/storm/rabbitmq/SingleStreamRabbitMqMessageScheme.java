@@ -41,7 +41,7 @@ public abstract class SingleStreamRabbitMqMessageScheme implements RabbitMqMessa
     }
 
     @Override
-    public final StreamedTuple convertToStreamedTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception {
+    public final StreamedTuple convertToStreamedTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws ConvertionException {
         List<Object> tuple = convertToTuple(envelope, properties, body);
         if (tuple == null || tuple.isEmpty()) {
             return null;
@@ -50,7 +50,7 @@ public abstract class SingleStreamRabbitMqMessageScheme implements RabbitMqMessa
         }
     }
 
-    public abstract List<Object> convertToTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception;
+    public abstract List<Object> convertToTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws ConvertionException;
 
     @Override
     public final Map<String, Fields> getStreamsOutputFields() {
@@ -59,5 +59,4 @@ public abstract class SingleStreamRabbitMqMessageScheme implements RabbitMqMessa
     }
 
     public abstract Fields getOutputFields();
-
 }

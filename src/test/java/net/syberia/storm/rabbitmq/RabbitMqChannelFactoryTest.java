@@ -16,16 +16,14 @@
 package net.syberia.storm.rabbitmq;
 
 import com.rabbitmq.client.Address;
-import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.ConnectionFactory;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import org.junit.Test;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertNotEquals;
+
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -86,7 +84,7 @@ public class RabbitMqChannelFactoryTest extends RabbitMqTest {
         RabbitMqChannelFactory rabbitMqChannelFactory = spy(RabbitMqChannelFactory.class);
         doReturn(mockConnectionFactory).when(rabbitMqChannelFactory).createConnectionFactory();
         rabbitMqChannelFactory.prepare();
-        Channel channel = rabbitMqChannelFactory.createChannel();
+        rabbitMqChannelFactory.createChannel();
         rabbitMqChannelFactory.cleanup();
     }
 
@@ -103,7 +101,7 @@ public class RabbitMqChannelFactoryTest extends RabbitMqTest {
     }
 
     @Test
-    public void equals() throws Exception {
+    public void equals() {
         RabbitMqChannelFactory factory1 = new RabbitMqChannelFactory(),
                 factory2 = new RabbitMqChannelFactory();
         assertEquals(factory1, factory2);
@@ -119,7 +117,7 @@ public class RabbitMqChannelFactoryTest extends RabbitMqTest {
     }
 
     @Test
-    public void hashCodeEquals() throws Exception {
+    public void hashCodeEquals() {
         RabbitMqChannelFactory factory1 = new RabbitMqChannelFactory(),
                 factory2 = new RabbitMqChannelFactory();
         assertEquals(factory1.hashCode(), factory2.hashCode());
@@ -139,7 +137,6 @@ public class RabbitMqChannelFactoryTest extends RabbitMqTest {
         Map<String, Object> stormConf = Collections.singletonMap(RabbitMqConfig.KEY_USERNAME, "withStormConfig test user");
         RabbitMqChannelFactory factory1 = RabbitMqChannelFactory.withStormConfig(stormConf),
                 factory2 = RabbitMqChannelFactory.withStormConfig(stormConf);
-        assertTrue(factory1 == factory2);
+        assertSame(factory1, factory2);
     }
-
 }

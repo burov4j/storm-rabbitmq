@@ -35,7 +35,7 @@ class AutorecoverableQueueingConsumer extends DefaultConsumer {
     
     private final BlockingQueue<RabbitMqMessage> queue = new LinkedBlockingQueue<>();
     
-    public AutorecoverableQueueingConsumer(Channel channel) {
+    AutorecoverableQueueingConsumer(Channel channel) {
         super(channel);
     }
 
@@ -54,8 +54,7 @@ class AutorecoverableQueueingConsumer extends DefaultConsumer {
         queue.add(rabbitMqMessage);
     }
     
-    public RabbitMqMessage nextMessage(long timeout) throws InterruptedException {
+    RabbitMqMessage nextMessage(long timeout) throws InterruptedException {
         return queue.poll(timeout, TimeUnit.MILLISECONDS);
     }
-    
 }

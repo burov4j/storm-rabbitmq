@@ -29,14 +29,13 @@ public interface TupleToRabbitMqMessageConverter extends Serializable {
     
     void prepare(Map config, TopologyContext context);
     
-    String getExchange(Tuple tuple) throws Exception;
+    String getExchange(Tuple tuple) throws ConvertionException;
     
-    String getRoutingKey(Tuple tuple) throws Exception;
+    String getRoutingKey(Tuple tuple) throws ConvertionException;
     
-    BasicProperties getProperties(Tuple tuple) throws Exception;
+    BasicProperties getProperties(Tuple tuple) throws ConvertionException;
     
-    byte[] getMessageBody(Tuple tuple) throws Exception;
+    byte[] getMessageBody(Tuple tuple) throws ConvertionException;
     
     void cleanup();
-    
 }

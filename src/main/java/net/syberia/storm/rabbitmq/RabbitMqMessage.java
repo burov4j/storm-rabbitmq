@@ -28,7 +28,7 @@ class RabbitMqMessage {
     private final AMQP.BasicProperties properties;
     private final byte[] body;
 
-    public RabbitMqMessage(Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
+    RabbitMqMessage(Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
         this.envelope = envelope;
         this.properties = properties;
         this.body = body;
@@ -45,5 +45,4 @@ class RabbitMqMessage {
     public byte[] getBody() {
         return body;
     }
-
 }

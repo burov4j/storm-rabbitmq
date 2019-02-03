@@ -34,22 +34,22 @@ class EmptyTupleToRabbitMqMessageConverter implements TupleToRabbitMqMessageConv
     }
 
     @Override
-    public String getExchange(Tuple tuple) throws Exception {
+    public String getExchange(Tuple tuple) {
         return null;
     }
 
     @Override
-    public String getRoutingKey(Tuple tuple) throws Exception {
+    public String getRoutingKey(Tuple tuple) {
         return null;
     }
 
     @Override
-    public AMQP.BasicProperties getProperties(Tuple tuple) throws Exception {
+    public AMQP.BasicProperties getProperties(Tuple tuple) {
         return null;
     }
 
     @Override
-    public byte[] getMessageBody(Tuple tuple) throws Exception {
+    public byte[] getMessageBody(Tuple tuple) {
         return new byte[0];
     }
 
@@ -57,5 +57,4 @@ class EmptyTupleToRabbitMqMessageConverter implements TupleToRabbitMqMessageConv
     public void cleanup() {
         // no operation
     }
-
 }

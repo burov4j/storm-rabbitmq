@@ -96,7 +96,7 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
         List<Object> tuple = Collections.singletonList("testValue");
         RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme() {
             @Override
-            public StreamedTuple convertToStreamedTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception {
+            public StreamedTuple convertToStreamedTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
                 return new StreamedTuple(streamId, tuple);
             }
         }));
@@ -116,7 +116,7 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
     public void unableToConvertRabbitMqMessage() throws InterruptedException, IOException {
         RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme() {
             @Override
-            public StreamedTuple convertToStreamedTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception {
+            public StreamedTuple convertToStreamedTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
                 throw new RuntimeException();
             }
         }));
@@ -136,7 +136,7 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
     public void unableToConvertRabbitMqMessageAndUnableToReject() throws InterruptedException, IOException {
         RabbitMqSpout rabbitMqSpout = spy(new RabbitMqSpout(new EmptyRabbitMqMessageScheme() {
             @Override
-            public StreamedTuple convertToStreamedTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception {
+            public StreamedTuple convertToStreamedTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) {
                 throw new RuntimeException();
             }
         }));
@@ -154,7 +154,7 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
         verify(mockSpoutOutputCollector, times(2)).reportError(any(Exception.class));
     }
 
-    private void prepareMessageForConsumer(RabbitMqSpout rabbitMqSpout) throws InterruptedException, IOException {
+    private void prepareMessageForConsumer(RabbitMqSpout rabbitMqSpout) throws InterruptedException {
         Envelope envelope = new Envelope(TEST_MESSAGE_ID, false, null, null);
         AutorecoverableQueueingConsumer mockQueueingConsumer = mock(AutorecoverableQueueingConsumer.class);
         RabbitMqMessage message = new RabbitMqMessage(envelope, null, null);
@@ -383,5 +383,4 @@ public class RabbitMqSpoutTest extends StormRabbitMqTest {
     private void openSimpleRabbitMqSpout(RabbitMqSpout rabbitMqSpout) {
         rabbitMqSpout.open(MINIMUM_CONF, mockTopologyContext, mockSpoutOutputCollector);
     }
-
 }
