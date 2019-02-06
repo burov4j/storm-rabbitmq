@@ -1,8 +1,8 @@
 # Storm RabbitMQ
 
-[![Build Status](https://travis-ci.org/anderelate/storm-rabbitmq.png)](https://travis-ci.org/anderelate/storm-rabbitmq)
-[![codecov](https://codecov.io/gh/anderelate/storm-rabbitmq/branch/master/graph/badge.svg)](https://codecov.io/gh/anderelate/storm-rabbitmq)
-[![Maven Version](https://maven-badges.herokuapp.com/maven-central/net.syberia.storm/storm-rabbitmq/badge.svg)](http://search.maven.org/#search|gav|1|g:"net.syberia.storm"%20AND%20a:"storm-rabbitmq")
+[![Build Status](https://travis-ci.org/burov4j/storm-rabbitmq.png)](https://travis-ci.org/burov4j/storm-rabbitmq)
+[![codecov](https://codecov.io/gh/burov4j/storm-rabbitmq/branch/master/graph/badge.svg)](https://codecov.io/gh/burov4j/storm-rabbitmq)
+[![Maven Version](https://maven-badges.herokuapp.com/maven-central/ru.burov4j.storm/storm-rabbitmq/badge.svg)](http://search.maven.org/#search|gav|1|g:"ru.burov4j.storm"%20AND%20a:"storm-rabbitmq")
 
 Предоставляет базовые реализации интерфейсов [IRichSpout](https://storm.apache.org/releases/1.2.1/javadocs/org/apache/storm/topology/IRichSpout.html) и [IRichBolt](https://storm.apache.org/releases/1.2.1/javadocs/org/apache/storm/topology/IRichBolt.html) для взаимодействия с [RabbitMQ](https://www.rabbitmq.com/) из топологий [Apache Storm](http://storm.apache.org/).
 
