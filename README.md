@@ -1,6 +1,6 @@
 # Storm RabbitMQ
 
-[![Build Status](https://travis-ci.org/burov4j/storm-rabbitmq.png)](https://travis-ci.org/burov4j/storm-rabbitmq)
+[![Build Status](https://travis-ci.org/burov4j/storm-rabbitmq.svg)](https://travis-ci.org/burov4j/storm-rabbitmq)
 [![codecov](https://codecov.io/gh/burov4j/storm-rabbitmq/branch/master/graph/badge.svg)](https://codecov.io/gh/burov4j/storm-rabbitmq)
 [![Maven Version](https://maven-badges.herokuapp.com/maven-central/ru.burov4j.storm/storm-rabbitmq/badge.svg)](http://search.maven.org/#search|gav|1|g:"ru.burov4j.storm"%20AND%20a:"storm-rabbitmq")
 
