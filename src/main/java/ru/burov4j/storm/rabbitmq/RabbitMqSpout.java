@@ -147,7 +147,6 @@ public class RabbitMqSpout extends BaseRichSpout {
             rabbitMqMessage = queueingConsumer.nextMessage(1L);
         } catch (InterruptedException ex) {
             log.info("The consumer interrupted");
-            Thread.currentThread().interrupt();
             return;
         }
 
