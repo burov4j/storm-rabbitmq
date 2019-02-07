@@ -4,7 +4,7 @@
 [![codecov](https://codecov.io/gh/burov4j/storm-rabbitmq/branch/master/graph/badge.svg)](https://codecov.io/gh/burov4j/storm-rabbitmq)
 [![Maven Version](https://maven-badges.herokuapp.com/maven-central/ru.burov4j.storm/storm-rabbitmq/badge.svg)](http://search.maven.org/#search|gav|1|g:"ru.burov4j.storm"%20AND%20a:"storm-rabbitmq")
 
-Provides implementations of [IRichSpout](https://storm.apache.org/releases/1.2.1/javadocs/org/apache/storm/topology/IRichSpout.html) and [IRichBolt](https://storm.apache.org/releases/1.2.1/javadocs/org/apache/storm/topology/IRichBolt.html) for [RabbitMQ](https://www.rabbitmq.com/).
+Provides implementations of [IRichSpout](https://storm.apache.org/releases/1.2.2/javadocs/org/apache/storm/topology/IRichSpout.html) and [IRichBolt](https://storm.apache.org/releases/1.2.2/javadocs/org/apache/storm/topology/IRichBolt.html) for [RabbitMQ](https://www.rabbitmq.com/).
 
 ## RabbitMQ Connection
 
