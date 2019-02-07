@@ -4,11 +4,11 @@
 [![codecov](https://codecov.io/gh/burov4j/storm-rabbitmq/branch/master/graph/badge.svg)](https://codecov.io/gh/burov4j/storm-rabbitmq)
 [![Maven Version](https://maven-badges.herokuapp.com/maven-central/ru.burov4j.storm/storm-rabbitmq/badge.svg)](http://search.maven.org/#search|gav|1|g:"ru.burov4j.storm"%20AND%20a:"storm-rabbitmq")
 
-Предоставляет базовые реализации интерфейсов [IRichSpout](https://storm.apache.org/releases/1.2.1/javadocs/org/apache/storm/topology/IRichSpout.html) и [IRichBolt](https://storm.apache.org/releases/1.2.1/javadocs/org/apache/storm/topology/IRichBolt.html) для взаимодействия с [RabbitMQ](https://www.rabbitmq.com/) из топологий [Apache Storm](http://storm.apache.org/).
+Provides implementations of [IRichSpout](https://storm.apache.org/releases/1.2.1/javadocs/org/apache/storm/topology/IRichSpout.html) and [IRichBolt](https://storm.apache.org/releases/1.2.1/javadocs/org/apache/storm/topology/IRichBolt.html) for [RabbitMQ](https://www.rabbitmq.com/).
 
 ## RabbitMQ Connection
 
-Конфигурацию для подключения к RabbitMQ можно настроить с помощью класса RabbitMqConfigBuilder:
+You can set RabbitMQ connection properties using RabbitMqConfigBuilder:
 
 ```java
 RabbitMqConfig rabbitMqConfig = new RabbitMqConfigBuilder()
@@ -24,7 +24,7 @@ builder.setSpout("rabbitmq-spout", new RabbitMqSpout(rabbitMqConfig, scheme))
        .addConfiguration(RabbitMqSpout.KEY_QUEUE_NAME, "myQueue");
 ```
 
-Вы можете сделать то же самое через стандартный Storm's API
+The same with Storm's API:
 
 ```java
 TopologyBuilder builder = new TopologyBuilder();
@@ -37,9 +37,8 @@ builder.setSpout("rabbitmq-spout", new RabbitMqSpout(scheme))
        .addConfiguration(RabbitMqConfig.KEY_VIRTUAL_HOST, "/");
 ```
 
-При этом не обязательно указывать все параметры. 
-Вы можете задать, например, только адрес RabbitMQ.
-В этом случае остальные параметры будут установлены в значения по умолчанию:
+It is not required to set all of properties: for example, you can set only RabbitMQ address.
+In the case another properties will set as defaults:
 
 ```java
 RabbitMqConfig rabbitMqConfig = new RabbitMqConfigBuilder()
@@ -53,8 +52,8 @@ builder.setSpout("rabbitmq-spout", new RabbitMqSpout(rabbitMqConfig, scheme))
 
 ## RabbitMQ Spout
 
-Класс RabbitMqSpout десериализует входящие сообщения и отправляет их в топологию.
-Для его использования вам необходимо реализовать интерфейс RabbitMqMessageScheme:
+RabbitMqSpout deserializes input messages and then sends it in your Storm's topology.
+For using the class you should implement RabbitMqMessageScheme interface:
 
 ```java
 class MyRabbitMqMessageScheme implements RabbitMqMessageScheme {
@@ -65,7 +64,7 @@ class MyRabbitMqMessageScheme implements RabbitMqMessageScheme {
     }
 
     @Override
-    public StreamedTuple convertToStreamedTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception {
+    public StreamedTuple convertToStreamedTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws ConvertionException {
         // your implementation here
     }
 
@@ -78,11 +77,10 @@ class MyRabbitMqMessageScheme implements RabbitMqMessageScheme {
     public void cleanup() {
         // your implementation here
     }
-
 }
 ```
 
-Если вам нужен только один исходящий поток, то вы можете использовать класс SingleStreamRabbitMqMessageScheme:
+If you want to use only one output stream you can extends SingleStreamRabbitMqMessageScheme:
 
 ```java
 class MyRabbitMqMessageScheme extends SingleStreamRabbitMqMessageScheme {
@@ -93,7 +91,7 @@ class MyRabbitMqMessageScheme extends SingleStreamRabbitMqMessageScheme {
     }
                 
     @Override
-    public List<Object> convertToTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws Exception {
+    public List<Object> convertToTuple(Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws ConvertionException {
         // your implementation here
     }
     
@@ -106,18 +104,17 @@ class MyRabbitMqMessageScheme extends SingleStreamRabbitMqMessageScheme {
     public void cleanup() {
         // your implementation here
     }
-
 }
 ```
 
-Далее вам необходимо передать вашу реализацию в RabbitMqSpout:
+The next step is to pass your custom scheme to RabbitMqSpout:
 
 ```java
 MyRabbitMqMessageScheme scheme = new MyRabbitMqMessageScheme();
 RabbitMqSpout rabbitMqSpout = new RabbitMqSpout(scheme);
 ```
 
-Для RabbitMqSpout также можно указать различные параметры:
+You can also set some properties for RabbitMqSpout:
 
 ```java
 builder.setSpout("rabbitmq-spout", rabbitMqSpout)
@@ -127,12 +124,12 @@ builder.setSpout("rabbitmq-spout", rabbitMqSpout)
        .addConfiguration(RabbitMqSpout.KEY_REQUEUE_ON_FAIL, false);
 ```
 
-При этом параметр RabbitMqSpout.KEY_QUEUE_NAME является обязательным.
+Note that the property RabbitMqSpout.KEY_QUEUE_NAME is required.
 
 ## RabbitMQ Bolt
 
-Если вы хотите отправлять сообщения из топологии в RabbitMQ, то вы можете использовать класс RabbitMqBolt.
-Для его использования вам необходимо реализовать интерфейс TupleToRabbitMqMessageConverter:
+If you want to send messages from your Storm's topology to RabbitMQ, you can use RabbitMqBolt.
+In the case you should implement TupleToRabbitMqMessageConverter interface:
 
 ```java
 class MyTupleToRabbitMqMessageConverter implements TupleToRabbitMqMessageConverter {
@@ -143,22 +140,22 @@ class MyTupleToRabbitMqMessageConverter implements TupleToRabbitMqMessageConvert
     }
 
     @Override
-    public String getExchange(Tuple tuple) throws Exception {
+    public String getExchange(Tuple tuple) throws ConvertionException {
         // your implementation here
     }
 
     @Override
-    public String getRoutingKey(Tuple tuple) throws Exception {
+    public String getRoutingKey(Tuple tuple) throws ConvertionException {
         // your implementation here
     }
 
     @Override
-    public AMQP.BasicProperties getProperties(Tuple tuple) throws Exception {
+    public AMQP.BasicProperties getProperties(Tuple tuple) throws ConvertionException {
         // your implementation here
     }
 
     @Override
-    public byte[] getMessageBody(Tuple tuple) throws Exception {
+    public byte[] getMessageBody(Tuple tuple) throws ConvertionException {
         // your implementation here
     }
 
@@ -166,18 +163,17 @@ class MyTupleToRabbitMqMessageConverter implements TupleToRabbitMqMessageConvert
     public void cleanup() {
         // your implementation here
     }
-
 }
 ```
 
-Далее вам необходимо передать вашу реализацию в RabbitMqBolt:
+The next step is to pass your custom converter to RabbitMqBolt:
 
 ```java
 MyTupleToRabbitMqMessageConverter converter = new MyTupleToRabbitMqMessageConverter();
 RabbitMqBolt rabbitMqBolt = new RabbitMqBolt(converter);
 ```
 
-Для RabbitMqBolt также можно указать различные параметры:
+You can also set some properties for RabbitMqBolt:
 
 ```java
 builder.setBolt("rabbitmq-bolt", rabbitMqBolt)
@@ -185,4 +181,4 @@ builder.setBolt("rabbitmq-bolt", rabbitMqBolt)
        .addConfiguration(RabbitMqBolt.KEY_IMMEDIATE, false);
 ```
 
-Подробнее о параметрах для работы с RabbitMQ вы можете прочитать здесь: https://www.rabbitmq.com/amqp-0-9-1-reference.html
+You can read more information about RabbitMQ properties here: https://www.rabbitmq.com/amqp-0-9-1-reference.html
