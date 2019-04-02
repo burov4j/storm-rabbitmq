@@ -142,6 +142,25 @@ builder.setSpout("rabbitmq-spout", rabbitMqSpout)
 
 Note that the property RabbitMqSpout.KEY_QUEUE_NAME is required.
 
+To do some preparation login you can implement RabbitMqInitializer interface:
+
+```java
+class MyRabbitMqInitializer implements RabbitMqInitializer {
+    
+    @Override
+    public void initialize(Channel channel) throws IOException {
+        // your implementation here
+    }
+}
+```
+
+and then put it in your spout:
+
+```java
+RabbitMqInitializer myRabbitMqInitializer = new MyRabbitMqInitializer();
+rabbitMqSpout.setInitializer(myRabbitMqInitializer);
+```
+
 ## RabbitMQ Bolt
 
 If you want to send messages from your Storm's topology to RabbitMQ, you can use RabbitMqBolt.
