@@ -142,7 +142,7 @@ builder.setSpout("rabbitmq-spout", rabbitMqSpout)
 
 Note that the property RabbitMqSpout.KEY_QUEUE_NAME is required.
 
-To do some preparation login you can implement RabbitMqInitializer interface:
+To do some preparation logic you can implement RabbitMqInitializer interface:
 
 ```java
 class MyRabbitMqInitializer implements RabbitMqInitializer {
