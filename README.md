@@ -6,6 +6,22 @@
 
 Provides implementations of [IRichSpout](https://storm.apache.org/releases/1.2.2/javadocs/org/apache/storm/topology/IRichSpout.html) and [IRichBolt](https://storm.apache.org/releases/1.2.2/javadocs/org/apache/storm/topology/IRichBolt.html) for [RabbitMQ](https://www.rabbitmq.com/).
 
+## Maven
+
+```xml
+<dependency>
+    <groupId>ru.burov4j.storm</groupId>
+    <artifactId>storm-rabbitmq</artifactId>
+    <version>1.0.1</version>
+</dependency>
+```
+
+## Gradle
+
+```groovy
+compile 'ru.burov4j.storm:storm-rabbitmq:1.0.1'
+```
+
 ## RabbitMQ Connection
 
 You can set RabbitMQ connection properties using RabbitMqConfigBuilder:
